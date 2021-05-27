@@ -1,0 +1,25 @@
+{
+  "name": "com.zappar.uar",
+  "version": "1.0.1-preview.1",
+  "displayName": "Universal AR",
+  "description": "Unity SDK for Zappar computer vision library",
+  "unity": "2019.1",
+  "unityRelease": "0b5",
+  "dependencies": {},
+"samples": [
+        {
+            "displayName": "Examples",
+      	    "description": "Tracking sample scenes",
+            "path": "Samples~/Examples"
+        }
+    ],
+ "keywords": [
+    "UniversalAR",
+    "Zappar",
+    "ZCV"
+  ],
+  "author": {
+    "name": "Shubham",
+    "email": "shubham@zappar.com"
+  }
+}
