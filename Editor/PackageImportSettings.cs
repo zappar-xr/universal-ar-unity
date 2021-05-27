@@ -23,7 +23,7 @@ public class PackageImportSettings
 
         if (!dir.Exists)
         {
-            Debug.Log("Source directory does not exist or could not be found: " + sourceDirName);
+            //Debug.Log("Source directory does not exist or could not be found: " + sourceDirName);
             return;
         }
 

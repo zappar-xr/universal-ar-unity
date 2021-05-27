@@ -3,10 +3,11 @@
   "version": "1.0.1-preview.1",
   "displayName": "Universal AR",
   "description": "Unity SDK for Zappar computer vision library",
+  "documentationUrl" : "https://docs.zap.works/universal-ar/unity/",
   "unity": "2019.1",
   "unityRelease": "0b5",
   "dependencies": {},
-"samples": [
+  "samples": [
         {
             "displayName": "Examples",
       	    "description": "Tracking sample scenes",

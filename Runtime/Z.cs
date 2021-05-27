@@ -63,7 +63,7 @@ public class Z
         VERBOSE = 3
     }
 
-    private const string ZCVResourcesPath = "Packages/com.Zappar.UAR/Contents/";
+    private const string ZCVResourcesPath = "Packages/com.zappar.uar/Contents/";
 
 #pragma warning disable 0162
         public static string FaceTrackingModelPath()
@@ -644,8 +644,6 @@ public class Z
     }
 
     public static byte[] LoadRawBytes(string filename) {
-            //string filepath = Path.Combine(Application.dataPath, filename);
-            Debug.Log(Path.GetFullPath(filename));
         return File.ReadAllBytes(filename);
     }
 
