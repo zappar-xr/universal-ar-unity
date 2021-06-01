@@ -9,6 +9,8 @@ public class PackageImportSettings
     static PackageImportSettings()
     {
 #if UNITY_EDITOR
+        if (Application.isPlaying) return;
+
         //Copy WebGL templates from package to project
         string srcDir = "Packages/com.zappar.uar/WebGLTemplates";
         string destDir = Application.dataPath + "/WebGLTemplates";
@@ -36,8 +38,11 @@ public class PackageImportSettings
         FileInfo[] files = dir.GetFiles();
         foreach (FileInfo file in files)
         {
+            if (file.Extension == ".meta")
+                continue;
+
             string tempPath = Path.Combine(destDirName, file.Name);
-            file.CopyTo(tempPath, false);
+            file.CopyTo(tempPath, true);
         }
 
         // If copying subdirectories, copy them and their contents to new location.
