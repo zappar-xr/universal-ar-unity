@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class ZapparTrackingTarget : MonoBehaviour 
+namespace Zappar
 {
-
-    // All tracking targets must implement this in order 
-    // to drive the camera pose.
-    public virtual Matrix4x4 AnchorPoseCameraRelative() 
+    public class ZapparTrackingTarget : MonoBehaviour
     {
-        return Matrix4x4.identity;
+
+        // All tracking targets must implement this in order 
+        // to drive the camera pose.
+        public virtual Matrix4x4 AnchorPoseCameraRelative()
+        {
+            return Matrix4x4.identity;
+        }
     }
 }

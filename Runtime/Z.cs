@@ -63,6 +63,25 @@ public class Z
         VERBOSE = 3
     }
 
+#if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
+    public enum DebugMode
+    {
+        None = 0,
+        File = 1,
+        UnityLog = 2
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void DebugLogDelegate(string str);
+
+    [DllImport(Config.PluginName, EntryPoint = "ZapparSetDebugMode")]
+    public static extern void SetDebugMode(DebugMode mode, LogLevel level);
+    [DllImport(Config.PluginName, EntryPoint = "ZapparSetLogFunc")]
+    public static extern void SetLogFunc(DebugLogDelegate func);
+    [DllImport(Config.PluginName, EntryPoint = "ZapparSetErrorFunc")]
+    public static extern void SetErrorFunc(DebugLogDelegate func);
+#endif
+
     private const string ZCVResourcesPath = "Packages/com.zappar.uar/Contents/";
 
 #pragma warning disable 0162
@@ -118,6 +137,7 @@ public class Z
 
     [DllImport(Config.PluginName)]
     private static extern void zappar_log_level_set(uint level);
+
 
 
     [DllImport(Config.PluginName)]
@@ -402,21 +422,21 @@ public class Z
     private static extern IntPtr zappar_process_callback_gl();
 #endif
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
     [DllImport("ZCVAndroidRenderPlugin")]        
 #else
     [DllImport(Config.PluginName)]
 #endif
     private static extern IntPtr zappar_upload_callback_native_gl();
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
     [DllImport("ZCVAndroidRenderPlugin")]        
 #else
     [DllImport(Config.PluginName)]
 #endif
     private static extern IntPtr zappar_upload_callback_native_metal();
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
     [DllImport("ZCVAndroidRenderPlugin")]        
 #else
     [DllImport(Config.PluginName)]
@@ -428,7 +448,7 @@ public class Z
     private static extern void zappar_pipeline_gl_context_set(IntPtr pipeline);
 #endif
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
     [DllImport("ZCVAndroidRenderPlugin")]        
 #else
     [DllImport(Config.PluginName)]
@@ -714,6 +734,7 @@ public class Z
         zappar_log_level_set((uint)level);
         
     }
+	
 	
 	
 	public static void PermissionRequestUi() {

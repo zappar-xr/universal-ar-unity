@@ -1,146 +1,134 @@
-﻿
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections.Generic;
-using System.Collections;
 
-using Zappar;
-
-#if UNITY_EDITOR
-using UnityEditor;
-using System.IO;
-#endif
-
-public class ZapparImageTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
+namespace Zappar
 {
-    private bool m_isMirrored;
-
-    private IntPtr m_imageTracker = IntPtr.Zero;
-    private bool m_hasInitialised = false;
-
-#if UNITY_EDITOR
-    [TargetFileListPopup()]
-    [Tooltip("Select the ZPT file you would like to track.")]
-#endif
-    public string Target;
-
-    private enum Orientation
+    public class ZapparImageTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
     {
-        Flat,
-        Upright
-    }
-    [Tooltip("During play offset the tracker's rotation accordingly")]
-    [SerializeField]
-    private Orientation orientation = Orientation.Flat;
+        private bool m_isMirrored;
 
-    public UnityEvent m_OnSeenEvent;
-    public UnityEvent m_OnNotSeenEvent;
-    private bool m_isVisible = false;
+        public IntPtr m_ImageTracker = IntPtr.Zero;
+        public IntPtr m_Pipeline = IntPtr.Zero;
+        private bool m_hasInitialised = false;
 
-    void OnValidate()
-    {
-#if UNITY_EDITOR
-        GameObject previewImage = GameObject.Find("Preview Image");
-        if(previewImage != null) 
-            previewImage.transform.eulerAngles = orientation == Orientation.Flat ? new Vector3(0, 0, 0) : new Vector3(-90,0,0);
+        [TargetFileListPopup]
+        [Tooltip("Select the ZPT file you would like to track.")]
+        public string Target;
 
-        string currentFilename = GetComponent<ZapparEditModeImageTarget>().currentFilename;
-        if (currentFilename != Target)
-            GetComponent<ZapparEditModeImageTarget>().OnZPTFilenameChange();
-#endif
-    }
-
-    void Start()
-    {
-        if (m_OnSeenEvent == null)
-            m_OnSeenEvent = new UnityEvent();
-
-        if (m_OnNotSeenEvent == null)
-            m_OnNotSeenEvent = new UnityEvent();
-
-        if (ZapparCamera.Instance != null)
-            ZapparCamera.Instance.RegisterCameraListener(this);
-    }
-
-    public void OnZapparInitialised(IntPtr pipeline)
-    {
-        if (!gameObject.activeInHierarchy){
-            Debug.Log("Could not start LoadZPTTarget Coroutine as gameobject is inactive.");
-            return;
-        }
-        m_hasInitialised = true;
-        m_imageTracker = Z.ImageTrackerCreate(pipeline);
-
-        string filename = Target;
-        StartCoroutine(Z.LoadZPTTarget(filename, TargetDataAvailableCallback));
-    }
-
-    public void OnMirroringUpdate(bool mirrored)
-    {
-        m_isMirrored = mirrored;
-    }
-
-    void UpdateTargetPose()
-    {
-        Matrix4x4 cameraPose = ZapparCamera.Instance.GetPose();
-        Matrix4x4 imagePose = Z.ImageTrackerAnchorPose(m_imageTracker, 0, cameraPose, m_isMirrored);
-        Matrix4x4 targetPose = Z.ConvertToUnityPose(imagePose);
-        transform.localPosition = Z.GetPosition(targetPose);
-
-        // Offset rotations based on dropdown provided by inspector properties
-        Quaternion rotation = orientation == Orientation.Flat ? Z.GetRotation(targetPose) * Quaternion.Euler(Vector3.left * 90) : Z.GetRotation(targetPose);
-        transform.localRotation = rotation;
-
-        transform.localScale = Z.GetScale(targetPose);
-    }
-
-    void Update()
-    {
-        if (!m_hasInitialised)
+        public enum PlaneOrientation
         {
-            return;
+            Flat,
+            Upright
+        }
+        [Tooltip("During play offset the tracker's rotation accordingly")]
+        [SerializeField]
+        private PlaneOrientation orientation = PlaneOrientation.Flat;
+
+        public PlaneOrientation Orientation => orientation;
+        [HideInInspector]
+        public GameObject PreviewImagePlane = null;
+        [HideInInspector]
+        public string PreviewTarget = "";
+        [HideInInspector]
+        public PlaneOrientation PreviewOrientation = PlaneOrientation.Flat;
+
+        public UnityEvent m_OnSeenEvent;
+        public UnityEvent m_OnNotSeenEvent;
+        private bool m_isVisible = false;
+
+        void Start()
+        {
+            if (m_OnSeenEvent == null)
+                m_OnSeenEvent = new UnityEvent();
+
+            if (m_OnNotSeenEvent == null)
+                m_OnNotSeenEvent = new UnityEvent();
+
+            if (ZapparCamera.Instance != null)
+                ZapparCamera.Instance.RegisterCameraListener(this);
         }
 
-        if (Z.ImageTrackerAnchorCount(m_imageTracker) > 0)
+        public void OnZapparInitialised(IntPtr pipeline)
         {
-            if (!m_isVisible)
+            if (!gameObject.activeInHierarchy)
             {
-                m_isVisible = true;
-                m_OnSeenEvent.Invoke();
+                Debug.Log("Could not start LoadZPTTarget Coroutine as gameobject is inactive.");
+                return;
             }
-            UpdateTargetPose();
+            m_hasInitialised = true;
+            m_ImageTracker = Z.ImageTrackerCreate(pipeline);
+
+            string filename = Target;
+            StartCoroutine(Z.LoadZPTTarget(filename, TargetDataAvailableCallback));
         }
-        else
+
+        public void OnMirroringUpdate(bool mirrored)
         {
-            if(m_isVisible)
+            m_isMirrored = mirrored;
+        }
+
+        void UpdateTargetPose()
+        {
+            Matrix4x4 cameraPose = ZapparCamera.Instance.GetPose();
+            Matrix4x4 imagePose = Z.ImageTrackerAnchorPose(m_ImageTracker, 0, cameraPose, m_isMirrored);
+            Matrix4x4 targetPose = Z.ConvertToUnityPose(imagePose);
+            transform.localPosition = Z.GetPosition(targetPose);
+
+            // Offset rotations based on dropdown provided by inspector properties
+            Quaternion rotation = orientation == PlaneOrientation.Flat ? Z.GetRotation(targetPose) * Quaternion.Euler(Vector3.left * 90) : Z.GetRotation(targetPose);
+            transform.localRotation = rotation;
+
+            transform.localScale = Z.GetScale(targetPose);
+        }
+
+        void Update()
+        {
+            if (!m_hasInitialised)
             {
-                m_isVisible = false;
-                m_OnNotSeenEvent.Invoke();
+                return;
+            }
+
+            if (Z.ImageTrackerAnchorCount(m_ImageTracker) > 0)
+            {
+                if (!m_isVisible)
+                {
+                    m_isVisible = true;
+                    m_OnSeenEvent.Invoke();
+                }
+                UpdateTargetPose();
+            }
+            else
+            {
+                if (m_isVisible)
+                {
+                    m_isVisible = false;
+                    m_OnNotSeenEvent.Invoke();
+                }
             }
         }
-    }
 
-    private void TargetDataAvailableCallback(byte[] data)
-    {
-        Z.ImageTrackerTargetLoadFromMemory(m_imageTracker, data);
-    }
-
-    void OnDestroy()
-    {
-        if (m_hasInitialised)
+        private void TargetDataAvailableCallback(byte[] data)
         {
-            if (m_imageTracker != IntPtr.Zero) Z.ImageTrackerDestroy(m_imageTracker);
+            Z.ImageTrackerTargetLoadFromMemory(m_ImageTracker, data);
         }
-    }
 
-    public override Matrix4x4 AnchorPoseCameraRelative()
-    {
-        if (Z.ImageTrackerAnchorCount(m_imageTracker) > 0)
+        void OnDestroy()
         {
-            return Z.ImageTrackerAnchorPoseCameraRelative(m_imageTracker, 0, m_isMirrored);
+            if (m_hasInitialised)
+            {
+                if (m_ImageTracker != IntPtr.Zero) Z.ImageTrackerDestroy(m_ImageTracker);
+            }
         }
-        return Matrix4x4.identity;
-    }
 
+        public override Matrix4x4 AnchorPoseCameraRelative()
+        {
+            if (Z.ImageTrackerAnchorCount(m_ImageTracker) > 0)
+            {
+                return Z.ImageTrackerAnchorPoseCameraRelative(m_ImageTracker, 0, m_isMirrored);
+            }
+            return Matrix4x4.identity;
+        }
+
+    }
 }

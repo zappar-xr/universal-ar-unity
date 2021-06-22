@@ -6,7 +6,9 @@
   "documentationUrl" : "https://docs.zap.works/universal-ar/unity/",
   "unity": "2019.1",
   "unityRelease": "0b5",
-  "dependencies": {},
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.0"
+},
   "samples": [
         {
             "displayName": "Examples",
