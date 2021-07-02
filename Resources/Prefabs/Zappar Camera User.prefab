@@ -102,6 +102,7 @@ MonoBehaviour:
   cameraAttitudeFromGyro: 0
   mirrorRearCameras: 0
   mirrorUserCameras: 1
+  EditorCamera: FaceTime HD Camera (Built-in)
 --- !u!1 &5176714506044225465
 GameObject:
   m_ObjectHideFlags: 0
@@ -174,7 +175,7 @@ Camera:
   m_AllowMSAA: 1
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
+  m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
 --- !u!114 &5176714506044225470
@@ -189,4 +190,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf107aa5ece594fe1aa6c80028ab66ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraMaterial: {fileID: 2100000, guid: b4422c06513484cf6ada3af57f8d8f65, type: 2}

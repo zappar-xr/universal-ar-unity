@@ -166,13 +166,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582e641d5244241d1b4dd1498c523505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faceMaterial: {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
   useDefaultFullHead: 1
   fillEyeLeft: 0
   fillEyeRight: 0
   fillMouth: 0
   fillNeck: 0
   faceTracker: {fileID: 1090417569}
+  faceMaterial: {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
 --- !u!23 &107563088
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -323,7 +323,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!43 &775759912
+--- !u!43 &870961293
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -531,7 +531,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d3deb3198921491185ad99484b1fea5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: 57302a68427ce47c6b1ac522a4e90f82, type: 2}
+  material: {fileID: 2100000, guid: 8a348555f2ca24447b68ebbd3611608c, type: 2}
 --- !u!23 &915921160
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -550,7 +550,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 57302a68427ce47c6b1ac522a4e90f82, type: 2}
+  - {fileID: 2100000, guid: 8a348555f2ca24447b68ebbd3611608c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -578,7 +578,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 915921157}
-  m_Mesh: {fileID: 775759912}
+  m_Mesh: {fileID: 870961293}
 --- !u!1 &1090417568
 GameObject:
   m_ObjectHideFlags: 0
@@ -767,7 +767,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf107aa5ece594fe1aa6c80028ab66ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraMaterial: {fileID: 2100000, guid: b4422c06513484cf6ada3af57f8d8f65, type: 2}
 --- !u!20 &2053063955
 Camera:
   m_ObjectHideFlags: 0
@@ -861,7 +860,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 30cb1bcaddaf9f3459a07e12548dee83, type: 2}
+  - {fileID: 2100000, guid: 9ed2f4ef4bc16994da3f929d84e4df54, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

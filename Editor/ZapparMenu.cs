@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
+#if ZAPPAR_SRP
+using UnityEngine.Rendering.Universal;
+#endif
 
 namespace Zappar.Editor
 {
@@ -11,6 +14,9 @@ namespace Zappar.Editor
             GameObject camera = (GameObject)Resources.Load("Prefabs/Zappar Camera Rear");
             GameObject go = Instantiate(camera, Vector3.zero, Quaternion.identity);
             Undo.RegisterCreatedObjectUndo(go, "New camera added");
+#if ZAPPAR_SRP
+            ZapparUpdateSceneToSRP();
+#endif
         }
 
         [MenuItem("Zappar/Face Tracker")]
@@ -73,19 +79,108 @@ namespace Zappar.Editor
             SettingsService.OpenProjectSettings("Project/ZapparUARSettings");
         }
 
-        [MenuItem("Zappar/Utilities/Update Project Settings To Publish")]
+#if ZAPPAR_SRP
+        [MenuItem("Zappar/Editor/Update Project For StandardPipeline")]
+        static void ZapparUpdateProjectToNonSRP()
+        {
+            Debug.Log("Updating zappar to use standard pipeline");
+            BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
+            BuildTargetGroup group = BuildPipeline.GetBuildTargetGroup(target);
+            const string zapparSrp = "ZAPPAR_SRP";
+            string symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+
+            if (symbols.Contains(zapparSrp))
+            {
+                symbols = symbols.Remove(symbols.IndexOf(zapparSrp), 10);
+            }
+            else
+            {
+                Debug.Log("Standard pipeline is zappar is already set");
+                return;
+            }
+
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols);
+        }
+
+        [MenuItem("Zappar/Editor/Update Zappar Scene For SRP")]
+        static void ZapparUpdateSceneToSRP()
+        {
+            Debug.Log("Updating current scene to use Unity-SRP");
+            Camera uCam = GameObject.FindObjectOfType<ZapparCamera>().gameObject.GetComponent<Camera>();
+            Camera bCam = GameObject.FindObjectOfType<ZapparCameraBackground>().gameObject.GetComponent<Camera>();
+
+            EditorGUI.BeginChangeCheck();
+
+            if (uCam != null && bCam != null)
+            {
+                var camData = uCam.GetUniversalAdditionalCameraData();
+                camData.renderType = CameraRenderType.Overlay;
+                Undo.RecordObject(uCam, "updated overlay camera");
+
+                camData = bCam.GetUniversalAdditionalCameraData();
+                camData.renderType = CameraRenderType.Base;
+                camData.renderShadows = false;
+                bCam.depth = -1;
+                bCam.useOcclusionCulling = false;
+                camData.cameraStack.Clear();
+                camData.cameraStack.Add(uCam);
+                Undo.RecordObject(bCam, "update background camera");
+
+                EditorUtility.SetDirty(uCam.gameObject);
+                EditorUtility.SetDirty(bCam.gameObject);
+            }
+            else
+            {
+                Debug.Log("Zappar camera not properly configured");
+                return;
+            }
+        }
+#else
+        [MenuItem("Zappar/Editor/Update Project For SRP")]
+        static void ZapparUpdateProjectToSRP()
+        {
+            Debug.Log("Updating zappar project to use Unity-SRP");
+            BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
+            BuildTargetGroup group = BuildPipeline.GetBuildTargetGroup(target);
+            const string zapparSrp = "ZAPPAR_SRP";
+            string symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+
+            if (symbols.Contains(zapparSrp))
+            {
+                Debug.Log("Zappar SRP is already set");
+                return;
+            }
+
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols + ";" + zapparSrp);
+        }
+#endif
+
+
+        [MenuItem("Zappar/Editor/Update Project Settings To Publish")]
         static void ZapparPublishSettings()
         {
 #if UNITY_WEBGL
             // Other Settings
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP); //default is IL2CPP
-            //PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.High); can be disabled for IL2CPP backend
             PlayerSettings.stripEngineCode = true;
 
             //Publishing settings
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.dataCaching = true;
+
+            //Build Settings
+            EditorUserBuildSettings.development = false;
+#if UNITY_2020_1_OR_NEWER
+            PlayerSettings.WebGL.template = "Zappar2020";
+#elif UNITY_2018_1_OR_NEWER
+            PlayerSettings.WebGL.template = "Zappar";
+#else
+            Debug.LogError("Please upgrade to newer versions of Unity");
+#endif
+#else
+            PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.High);
+            PlayerSettings.stripEngineCode = true;
 
             //Build Settings
             EditorUserBuildSettings.development = false;

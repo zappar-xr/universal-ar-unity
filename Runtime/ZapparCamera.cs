@@ -26,7 +26,7 @@ namespace Zappar
         private IntPtr m_pipeline = IntPtr.Zero;
 
         private bool m_hasInitialised = false;
-        private bool m_permissionIsGranted = false;
+        private static bool m_permissionIsGranted = false;
         private bool m_cameraHasStarted = false;
 
         private Matrix4x4 m_cameraPose;
@@ -86,7 +86,8 @@ namespace Zappar
 
                         m_camera = Z.CameraSourceCreate(m_pipeline, cameraID);
 
-                        Z.PermissionRequestUi();
+                        if (!m_permissionIsGranted)
+                            Z.PermissionRequestUi();
 
                         m_isMirrored = (useFrontFacingCamera && mirrorUserCameras) || (!useFrontFacingCamera && mirrorRearCameras);
 

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using UnityEngine;
 using UnityEditor;
-
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 namespace Zappar.Editor
 {
     static class ZapparUARSettingsProvider
@@ -17,7 +17,11 @@ namespace Zappar.Editor
         {
             settings.Update();
 
-            EditorGUILayout.LabelField(string.Format("Version 1.0"));
+            PackageInfo info = PackageInfo.FindForAssetPath("Packages/com.zappar.uar/package.json");
+
+            EditorGUILayout.HelpBox("Version: " + info.version,MessageType.Info);
+
+            EditorGUILayout.Space(10);
             EditorGUILayout.PropertyField(settings.FindProperty("m_EnableImageTargetPreview"), Styles.ImageTargetPreview);
             EditorGUILayout.PropertyField(settings.FindProperty("m_DebugMode"), Styles.DebugMode);
             EditorGUILayout.PropertyField(settings.FindProperty("m_LogLevel"), Styles.LogLevel);

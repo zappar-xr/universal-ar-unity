@@ -2,7 +2,8 @@
     "name": "Zappar.UAR.Editor",
     "references": [
         "GUID:139c618766f367b4280b650efb618b72",
-        "GUID:478a2357cc57436488a56e564b08d223"
+        "GUID:478a2357cc57436488a56e564b08d223",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9"
     ],
     "includePlatforms": [
         "Editor"

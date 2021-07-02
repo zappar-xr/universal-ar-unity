@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Zappar
 {
@@ -27,6 +28,34 @@ namespace Zappar
             GL.Vertex3(x, y, -1);
         }
 
+#if ZAPPAR_SRP
+        private void Start()
+        {
+            RenderPipelineManager.endCameraRendering += RenderPipelineManager_endCameraRendering;
+        }
+
+        private void OnDestroy()
+        {
+            RenderPipelineManager.endCameraRendering -= RenderPipelineManager_endCameraRendering;
+        }
+
+        private void RenderPipelineManager_endCameraRendering(ScriptableRenderContext arg1, Camera arg2)
+        {
+            if (arg2.depth != -1)
+                return;
+            m_CameraMaterial.SetPass(0);
+            GL.PushMatrix();
+            GL.LoadIdentity();
+            GL.LoadProjectionMatrix(Matrix4x4.Ortho(0, 1, 0, 1, 0, 1));
+            GL.Begin(GL.QUADS);
+            Point(0, 0);
+            Point(0, 1);
+            Point(1, 1);
+            Point(1, 0);
+            GL.End();
+            GL.PopMatrix();
+        }
+#else
         void OnPostRender()
         {
             m_CameraMaterial.SetPass(0);
@@ -42,6 +71,7 @@ namespace Zappar
             GL.PopMatrix();
         }
 
+#endif
         void Update()
         {
             if (!m_Initialised || m_CameraMaterial == null)

@@ -31,6 +31,12 @@ public class ZapparFaceLandmark : MonoBehaviour, ZapparCamera.ICameraListener
     private IntPtr m_faceTrackerPtr;
     private IntPtr m_faceLandmarkPtr = IntPtr.Zero;
 
+    private const int m_numIdentityCoefficients = 50;
+    private const int m_numExpressionCoefficients = 29;
+
+    private float[] m_identity;
+    private float[] m_expression;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,14 +48,15 @@ public class ZapparFaceLandmark : MonoBehaviour, ZapparCamera.ICameraListener
     void Update()
     {
         if (m_faceLandmarkPtr == IntPtr.Zero) return;
-        
-        if(landmark != m_currentLandmark)
+
+        if (landmark != m_currentLandmark)
             InitFaceLandmark();
-        
-        var identity = Z.FaceTrackerAnchorIdentityCoefficients(m_faceTrackerPtr, 0);
-        var expression = Z.FaceTrackerAnchorExpressionCoefficients(m_faceTrackerPtr, 0);
-        Z.FaceLandmarkUpdate(m_faceLandmarkPtr, identity, expression, m_isMirrored);
-        
+
+        Z.FaceTrackerAnchorUpdateIdentityCoefficients(m_faceTrackerPtr, 0, ref m_identity);
+        Z.FaceTrackerAnchorUpdateExpressionCoefficients(m_faceTrackerPtr, 0, ref m_expression);
+
+        Z.FaceLandmarkUpdate(m_faceLandmarkPtr, m_identity, m_expression, m_isMirrored);
+
         var matrix = Z.ConvertToUnityPose(Z.FaceLandmarkAnchorPose(m_faceLandmarkPtr));
         transform.localPosition = Z.GetPosition(matrix);
         transform.localRotation = Z.GetRotation(matrix);
@@ -84,5 +91,10 @@ public class ZapparFaceLandmark : MonoBehaviour, ZapparCamera.ICameraListener
             Z.FaceLandmarkDestroy(m_faceLandmarkPtr);
         m_faceLandmarkPtr = Z.FaceLandmarkCreate((uint)landmark);
         m_currentLandmark = landmark;
+
+        m_identity = new float[m_numIdentityCoefficients];
+        m_expression = new float[m_numExpressionCoefficients];
+        for (int i = 0; i < m_numIdentityCoefficients; ++i) m_identity[i] = 0.0f;
+        for (int i = 0; i < m_numExpressionCoefficients; ++i) m_expression[i] = 0.0f;
     }
 }

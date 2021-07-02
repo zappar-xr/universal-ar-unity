@@ -1479,6 +1479,27 @@ public class Z
     }
 
     // END AUTOGEN
+
+    // Extra methods
+    public static void FaceTrackerAnchorUpdateIdentityCoefficients(IntPtr o, int indx, ref float[] coefficients) {
+        IntPtr ret = zappar_face_tracker_anchor_identity_coefficients(o, indx);
+        Marshal.Copy(ret, coefficients, 0, 50);
+    }
+    public static void FaceTrackerAnchorUpdateExpressionCoefficients(IntPtr o, int indx, ref float[] coefficients)
+    {
+        IntPtr ret = zappar_face_tracker_anchor_expression_coefficients(o, indx);
+        Marshal.Copy(ret, coefficients, 0, 29);
+    }
+    public static void UpdateFaceMeshVertices(IntPtr o, ref float[] verts)
+    {
+        IntPtr ret = zappar_face_mesh_vertices(o);
+        Marshal.Copy(ret, verts, 0, verts.Length);
+    }
+    public static void UpdateFaceMeshNormals(IntPtr o, ref float[] normals)
+    {
+        IntPtr ret = zappar_face_mesh_normals(o);
+        Marshal.Copy(ret, normals, 0, normals.Length);
+    }
 }
 }
 
