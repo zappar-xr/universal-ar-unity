@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.0-preview.2] - 2021-07-05
+### Added
+- Support for Unity Scriptable Pipeline
+- Capturing ZCV log in editor/file for debugging
+- Universal AR project level editor settings object - Log options and image target preview in scene
+- Extra sample scene for multi-image tracking
+
+### Fixed
+- Image tracker preview on windows editor
+- UAR package works in Unity with Android BuildPlatform
+- Reading of zpt files on windows platform
+- Updated face tracker and mesh implementation
+
+### Known issues
+- Slow frame rate on Chrome Android version 91.0.xxx. Seems to have been fixed in Chrome Beta Android version 92.0.xxx
+
+
 ## [1.0.1-preview.1] - 2021-06-01
 ### Added 
 - Unity SDK for ZCV libraries.
