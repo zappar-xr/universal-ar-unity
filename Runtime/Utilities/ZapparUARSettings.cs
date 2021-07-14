@@ -17,6 +17,14 @@ namespace Zappar
         }
 
         [SerializeField]
+        private bool m_EnableRealtimeReflections = false;
+        public bool EnableRealtimeReflections
+        {
+            get { return m_EnableRealtimeReflections; }
+            set { m_EnableRealtimeReflections = value; }
+        }
+
+        [SerializeField]
         private Z.DebugMode m_DebugMode = Z.DebugMode.UnityLog;
         public Z.DebugMode DebugMode
         {

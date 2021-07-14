@@ -6,7 +6,7 @@ namespace Zappar
 {
     internal abstract class ZapparFaceMesh : MonoBehaviour, ZapparCamera.ICameraListener
     {
-        private IntPtr m_faceMesh = IntPtr.Zero;
+        protected IntPtr m_faceMesh = IntPtr.Zero;
         private bool m_hasInitialised = false;
 
         public bool useDefaultFullHead = true;
@@ -17,7 +17,7 @@ namespace Zappar
 
         public ZapparFaceTrackingTarget faceTracker;
 
-        private Mesh m_mesh;
+        protected Mesh m_mesh;
         private bool m_haveInitialisedFaceMesh = false;
 
         private bool m_isMirrored;
@@ -56,8 +56,11 @@ namespace Zappar
             m_hasInitialised = true;
             m_haveInitialisedFaceMesh = false;
 
-            m_faceMesh = Z.FaceMeshCreate();
-            CreateMesh();
+            if (m_faceMesh == IntPtr.Zero)
+            {
+                m_faceMesh = Z.FaceMeshCreate();
+                CreateMesh();
+            }
         }
 
         public void OnMirroringUpdate(bool mirrored)
@@ -66,8 +69,11 @@ namespace Zappar
             m_haveInitialisedFaceMesh = false;
         }
 
-        private void CreateMesh()
+        protected void CreateMesh()
         {
+            if (m_mesh != null)
+                return;
+            
             LoadMeshData();
 
             m_mesh = new Mesh();
@@ -162,6 +168,14 @@ namespace Zappar
         {
             if (m_faceMesh != null)
                 Z.FaceMeshDestroy(m_faceMesh);
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+                Destroy(m_mesh);
+            else
+                DestroyImmediate(m_mesh);
+#else
+            Destroy(m_mesh);
+#endif
             m_haveInitialisedFaceMesh = false;
             m_hasInitialised = false;
         }

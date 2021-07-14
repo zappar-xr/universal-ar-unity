@@ -13,10 +13,12 @@ namespace Zappar.Editor
             if (target != BuildTarget.WebGL)
                 return;
 
+#if !UNITY_2020_1_OR_NEWER
             string path = Path.Combine(targetPath, "Build/UnityLoader.js");
             string text = File.ReadAllText(path);
             text = text.Replace("UnityLoader.SystemInfo.mobile", "false");
             File.WriteAllText(path, text);
+#endif
         }
     }
 }

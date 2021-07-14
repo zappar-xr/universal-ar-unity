@@ -37,9 +37,12 @@ namespace Zappar.Editor
                 //clear the preview
                 if (myScript.m_ImageTracker != IntPtr.Zero) Z.ImageTrackerDestroy(myScript.m_ImageTracker);
                 if (myScript.m_Pipeline != IntPtr.Zero) Z.PipelineDestroy(myScript.m_Pipeline);
-                
-                DestroyImmediate(myScript?.PreviewImagePlane);
-                EditorUtility.SetDirty(myScript?.gameObject);
+
+                if (myScript?.PreviewImagePlane != null)
+                {
+                    DestroyImmediate(myScript.PreviewImagePlane);
+                    EditorUtility.SetDirty(myScript.gameObject);
+                }
             }
         }
 

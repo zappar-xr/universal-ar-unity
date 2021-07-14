@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: ZapparUARSettings
   m_EditorClassIdentifier: 
   m_EnableImageTargetPreview: 1
+  m_EnableRealtimeReflections: 0
   m_DebugMode: 2
   m_LogLevel: 2

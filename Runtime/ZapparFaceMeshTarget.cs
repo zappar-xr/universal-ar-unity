@@ -15,6 +15,13 @@ namespace Zappar
 
             if (ZapparCamera.Instance != null)
                 ZapparCamera.Instance.RegisterCameraListener(this);
+
+            if (!Application.isPlaying && m_faceMesh == IntPtr.Zero)
+            {
+                //Create new face model
+                m_faceMesh = Z.FaceMeshCreate();
+                CreateMesh();
+            }
         }
 
         public void OnEnable()

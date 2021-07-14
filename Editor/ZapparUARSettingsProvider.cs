@@ -9,6 +9,7 @@ namespace Zappar.Editor
         class Styles
         {
             public static GUIContent ImageTargetPreview = new GUIContent("Enable Image Tracker Preview", "Show preview of image target");
+            public static GUIContent RealtimeReflections = new GUIContent("Enable Realtime Reflection", "Use ZCV camera source for realtime reflection");
             public static GUIContent DebugMode = new GUIContent("ZCV debug mode", "write logs to editor or to a file ");
             public static GUIContent LogLevel = new GUIContent("ZCV log level", "Log levels");
         }
@@ -20,12 +21,29 @@ namespace Zappar.Editor
             PackageInfo info = PackageInfo.FindForAssetPath("Packages/com.zappar.uar/package.json");
 
             EditorGUILayout.HelpBox("Version: " + info.version,MessageType.Info);
-
+            
+            
             EditorGUILayout.Space(10);
             EditorGUILayout.PropertyField(settings.FindProperty("m_EnableImageTargetPreview"), Styles.ImageTargetPreview);
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(settings.FindProperty("m_EnableRealtimeReflections"), Styles.RealtimeReflections);
+            if (EditorGUI.EndChangeCheck())
+            {
+                bool add = settings.FindProperty("m_EnableRealtimeReflections").boolValue;
+                if (add) ZapparUtilities.CreateLayer(ZapparReflectionProbe.ReflectionLayer); else ZapparUtilities.RemoveLayer(ZapparReflectionProbe.ReflectionLayer);
+                if(add && !QualitySettings.realtimeReflectionProbes)
+                {
+                    Debug.LogError("Please enable Realtime reflections from project Quality settings as well!");
+                }
+            }
             EditorGUILayout.PropertyField(settings.FindProperty("m_DebugMode"), Styles.DebugMode);
             EditorGUILayout.PropertyField(settings.FindProperty("m_LogLevel"), Styles.LogLevel);
 
+            
+#if ZAPPAR_SRP
+            EditorGUILayout.Space(20);
+            EditorGUILayout.HelpBox("Scriptable Pipeline Enabled for ZCV", MessageType.None, true);
+#endif
             settings.ApplyModifiedProperties();
         }
 
@@ -69,6 +87,7 @@ namespace Zappar.Editor
                 }
                 settings = ScriptableObject.CreateInstance<ZapparUARSettings>();
                 settings.ImageTargetPreviewEnabled = true;
+                settings.EnableRealtimeReflections = false;
                 settings.DebugMode = Z.DebugMode.UnityLog;
                 settings.LogLevel = Z.LogLevel.WARNING;
                 AssetDatabase.CreateAsset(settings, ZapparUARSettings.MySettingsPath);

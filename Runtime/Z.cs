@@ -595,24 +595,17 @@ public class Z
 
     public static Vector3 GetPosition(Matrix4x4 pose)
     {
-        Vector3 position = pose.GetColumn(3);
-        return new Vector3(position.x, position.y, position.z);
+        return pose.GetColumn(3);
     }
 
     public static Quaternion GetRotation(Matrix4x4 pose)
     {
-        Vector3 forwards = new Vector3(pose.m02, pose.m12, pose.m22);
-        Vector3 upwards = new Vector3(pose.m01, pose.m11, pose.m21);
-        return Quaternion.LookRotation(forwards, upwards);
+        return Quaternion.LookRotation(pose.GetColumn(2), pose.GetColumn(1));
     }
 
     public static Vector3 GetScale(Matrix4x4 pose)
     {
-        Vector3 scale;
-        scale.x = new Vector4(pose.m00, pose.m10, pose.m20, pose.m30).magnitude;
-        scale.y = new Vector4(pose.m01, pose.m11, pose.m21, pose.m31).magnitude;
-        scale.z = new Vector4(pose.m02, pose.m12, pose.m22, pose.m32).magnitude;
-        return scale;
+        return new Vector3(pose.GetColumn(0).magnitude,pose.GetColumn(1).magnitude,pose.GetColumn(2).magnitude);
     }
 
     public static int[] UpdateFaceMeshTrianglesForUnity(int[] meshTriangles) 
@@ -1481,6 +1474,10 @@ public class Z
     // END AUTOGEN
 
     // Extra methods
+    public static void PipelineCameraFrameTextureMatrix(IntPtr o, ref float[] mat4x4, int renderWidth, int renderHeight, bool mirror) {
+        IntPtr ret = zappar_pipeline_camera_frame_texture_matrix(o, renderWidth, renderHeight, mirror ? 1 : 0);
+        Marshal.Copy(ret, mat4x4, 0, 16);
+    }
     public static void FaceTrackerAnchorUpdateIdentityCoefficients(IntPtr o, int indx, ref float[] coefficients) {
         IntPtr ret = zappar_face_tracker_anchor_identity_coefficients(o, indx);
         Marshal.Copy(ret, coefficients, 0, 50);

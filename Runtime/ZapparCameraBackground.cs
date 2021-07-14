@@ -4,14 +4,19 @@ using UnityEngine.Rendering;
 
 namespace Zappar
 {
+    [RequireComponent(typeof(Camera))]
     public class ZapparCameraBackground : MonoBehaviour
     {
-
-        //[Tooltip("Material must have an Unlit/CameraBackgroundShader shader attached")]
-        private Material m_CameraMaterial;
+        private Material m_CameraMaterial=null;
 
         private bool m_Initialised = false;
         private Texture2D m_CamTexture = null;
+        private Matrix4x4 textureMatrix;
+        private float[] textureMatElements = null;
+        private Camera backgroundCamera = null;
+
+        public Texture2D GetCameraTexture => m_CamTexture;
+        public Matrix4x4 GetTextureMatrix => textureMatrix;
 
         private void Awake()
         {
@@ -20,6 +25,9 @@ namespace Zappar
             {
                 Debug.LogError("Can't render camera texture: Missing Zappar/CameraBackgroundShader!");
             }
+            textureMatrix = new Matrix4x4();
+            textureMatElements = new float[16];
+            backgroundCamera = GetComponent<Camera>();
         }
 
         void Point(float x, float y)
@@ -32,11 +40,6 @@ namespace Zappar
         private void Start()
         {
             RenderPipelineManager.endCameraRendering += RenderPipelineManager_endCameraRendering;
-        }
-
-        private void OnDestroy()
-        {
-            RenderPipelineManager.endCameraRendering -= RenderPipelineManager_endCameraRendering;
         }
 
         private void RenderPipelineManager_endCameraRendering(ScriptableRenderContext arg1, Camera arg2)
@@ -81,18 +84,47 @@ namespace Zappar
                 return;
             }
 
-            IntPtr pipeline = ZapparCamera.Instance.GetPipeline();
-            bool isMirrored = ZapparCamera.Instance.IsMirrored();
+            backgroundCamera.projectionMatrix = Z.PipelineProjectionMatrix(ZapparCamera.Instance.GetPipeline, Screen.width, Screen.height);
 
-            GetComponent<Camera>().projectionMatrix = Z.PipelineProjectionMatrix(pipeline, Screen.width, Screen.height);
+            Z.PipelineCameraFrameTextureMatrix(ZapparCamera.Instance.GetPipeline, ref textureMatElements, Screen.width, Screen.height, ZapparCamera.Instance.IsMirrored);
 
-            Matrix4x4 textureMatrix = Z.PipelineCameraFrameTextureMatrix(pipeline, Screen.width, Screen.height, isMirrored);
+            UpdateTextureMatrix();
+
             m_CameraMaterial.SetMatrix("_nativeTextureMatrix", textureMatrix);
 
-            m_CamTexture = Z.PipelineCameraFrameTexture(pipeline);
+            m_CamTexture = Z.PipelineCameraFrameTexture(ZapparCamera.Instance.GetPipeline);
             if (m_CamTexture != null)
                 m_CameraMaterial.mainTexture = m_CamTexture;
 
         }
+
+        private void UpdateTextureMatrix()
+        {
+            textureMatrix[0, 0] = textureMatElements[0];
+            textureMatrix[1, 0] = textureMatElements[1];
+            textureMatrix[2, 0] = textureMatElements[2];
+            textureMatrix[3, 0] = textureMatElements[3];
+            textureMatrix[0, 1] = textureMatElements[4];
+            textureMatrix[1, 1] = textureMatElements[5];
+            textureMatrix[2, 1] = textureMatElements[6];
+            textureMatrix[3, 1] = textureMatElements[7];
+            textureMatrix[0, 2] = textureMatElements[8];
+            textureMatrix[1, 2] = textureMatElements[9];
+            textureMatrix[2, 2] = textureMatElements[10];
+            textureMatrix[3, 2] = textureMatElements[11];
+            textureMatrix[0, 3] = textureMatElements[12];
+            textureMatrix[1, 3] = textureMatElements[13];
+            textureMatrix[2, 3] = textureMatElements[14];
+            textureMatrix[3, 3] = textureMatElements[15];
+        }
+
+        private void OnDestroy()
+        {
+            textureMatElements = null;            
+#if ZAPPAR_SRP
+            RenderPipelineManager.endCameraRendering -= RenderPipelineManager_endCameraRendering;
+#endif
+        }
+
     }
 }
