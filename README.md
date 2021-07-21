@@ -91,7 +91,7 @@ The library requires Android 6.0 (API version 23) or later so please set "Minimu
 
 Since the library makes use of the camera, you must set 'Camera Usage Description' in your player settings. This text is shown to the user when the operating system shows the camera permissions prompt.
 
-The default graphics API on iOS is Metal, however there may be cases where you wish to use OpenGL. Should this apply to you, edit the line below in the `Assets/Plugins/iOS/zappar-unity.h` file:
+The default graphics API on iOS is Metal, however there may be cases where you wish to use OpenGL. Should this apply to you, edit the line below in the `Packages/com.zappar.uar/Plugins/iOS/zappar-unity.h` file:
 
 ```c++
 #define ZAPPAR_METAL_SUPPORT // Comment out this line if you _do not_ want to include support for Metal. 

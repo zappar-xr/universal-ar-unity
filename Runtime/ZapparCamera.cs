@@ -31,6 +31,8 @@ namespace Zappar
 
         private Matrix4x4 m_cameraPose;
 
+        public bool CameraHasStarted => m_cameraHasStarted;
+
         // --------
         public bool useFrontFacingCamera;
         public bool cameraAttitudeFromGyro;
