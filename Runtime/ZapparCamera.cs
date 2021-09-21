@@ -1,26 +1,37 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Zappar
 {
     /// Wrapper around a single Pipeline example
+    [RequireComponent(typeof(Camera))]
     public class ZapparCamera : MonoBehaviour
     {
-        private static ZapparCamera sInstance;
-        public static ZapparCamera Instance
-        {
-            get { return sInstance; }
-        }
-
         public interface ICameraListener
         {
             void OnZapparInitialised(IntPtr pipeline);
             void OnMirroringUpdate(bool mirrored);
         }
 
-        private List<ICameraListener> listeners = new List<ICameraListener>();
+        private static ZapparCamera sInstance;
+        public static ZapparCamera Instance => sInstance;
+
+        public bool CameraHasStarted => m_cameraHasStarted;
+
         public ZapparTrackingTarget anchorOrigin;
+        // --------
+        public bool useFrontFacingCamera;
+        public bool cameraAttitudeFromGyro;
+
+        public bool mirrorRearCameras = false;
+        public bool mirrorUserCameras = true;
+
+        [CameraSourcesListPopup]
+        [Tooltip("Select camera to use when in Play mode.")]
+        public string EditorCamera;
+        // --------
 
         private IntPtr m_camera = IntPtr.Zero;
         private IntPtr m_pipeline = IntPtr.Zero;
@@ -28,22 +39,19 @@ namespace Zappar
         private bool m_hasInitialised = false;
         private static bool m_permissionIsGranted = false;
         private bool m_cameraHasStarted = false;
-
-        private Matrix4x4 m_cameraPose;
-
-        // --------
-        public bool useFrontFacingCamera;
-        public bool cameraAttitudeFromGyro;
-
-        public bool mirrorRearCameras = false;
-        public bool mirrorUserCameras = true;
         private bool m_isMirrored;
 
-        [CameraSourcesListPopup]
-        [Tooltip("Select camera to use when in Play mode.")]
-        public string EditorCamera;
-        // --------
+        private Matrix4x4 m_cameraPose;
+        private Camera m_unityCamera = null;
+        private float[] m_cameraModel = null;
+        private List<ICameraListener> listeners = new List<ICameraListener>();
 
+        #if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern bool ZapparIsVisible();
+        private bool m_isVisibilityPaused = false;
+        #endif
+        
         #region unity_methods
 
         void Awake()
@@ -55,10 +63,13 @@ namespace Zappar
 #if UNITY_ANDROID && !UNITY_EDITOR
         Z.AndroidApplicationContextSet();
 #endif
+            m_cameraModel = new float[]{ 0, 0, 0, 0, 0, 0 };
         }
 
         void Start()
         {
+            m_unityCamera = GetComponent<Camera>();
+
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
             var log = LogManager.Instance;
 #endif
@@ -69,6 +80,18 @@ namespace Zappar
 
         void Update()
         {
+            #if UNITY_WEBGL && !UNITY_EDITOR
+            if (ZapparIsVisible()) {
+                if (m_cameraHasStarted && m_isVisibilityPaused) {
+                    Z.CameraSourceStart(m_camera);
+                    m_isVisibilityPaused = false;
+                }
+            } else if (m_cameraHasStarted && !m_isVisibilityPaused) {
+                Z.CameraSourcePause(m_camera);
+                m_isVisibilityPaused = true;
+            }
+            #endif
+
             // If we haven't yet initialised the Zappar library.
             if (!m_hasInitialised)
             {
@@ -131,7 +154,7 @@ namespace Zappar
 
                     UpdatePose();
 
-                    GetComponent<Camera>().projectionMatrix = Z.PipelineProjectionMatrix(m_pipeline, Screen.width, Screen.height);
+                    m_unityCamera.projectionMatrix = Z.PipelineProjectionMatrix(m_pipeline, Screen.width, Screen.height, m_unityCamera.nearClipPlane, m_unityCamera.farClipPlane, ref m_cameraModel);
                 }
             }
         }

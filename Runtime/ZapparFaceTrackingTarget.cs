@@ -15,6 +15,8 @@ namespace Zappar
         private bool m_isMirrored;
         private bool m_isVisible = false;
 
+        public bool HasInitialized => m_hasInitialised;
+
         void Start()
         {
             if (m_OnSeenEvent == null)

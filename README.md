@@ -22,6 +22,7 @@ The [ZapWorks CLI](https://www.npmjs.com/package/@zappar/zapworks-cli) is a set 
     + [WebGL](#webgl)
   * [Supporting Unity Scriptable Render Pipeline (SRP)](#supporting-unity-scriptable-render-pipeline)
   * [Importing Examples](#importing-examples)
+  * [Zappar Image Training in Editor](#zappar-image-training-in-editor)
   * [Zappar Universal AR Settings](#zappar-universal-ar-settings)
   * [Licensing](#licensing)
   * [Using the Prefabs](#using-the-prefabs)
@@ -70,7 +71,7 @@ Another option is to define the `universal-ar-unity` package as dependency in yo
 }
 ```
 
-Note that you can modify the source github URL to define any particular `tag` or `branch` as well, by adding suffix: `#ID` to the git URL. You can read more about it here: https://docs.unity3d.com/Manual/upm-git.html
+Note that you can modify the source github URL to define any particular `tag`, `branch` or `commit hash`, by adding suffix: `#ID` to the git URL. You can read more about it here: https://docs.unity3d.com/Manual/upm-git.html
 
 
 ## Platform support
@@ -91,7 +92,7 @@ The library requires Android 6.0 (API version 23) or later so please set "Minimu
 
 Since the library makes use of the camera, you must set 'Camera Usage Description' in your player settings. This text is shown to the user when the operating system shows the camera permissions prompt.
 
-The default graphics API on iOS is Metal, however there may be cases where you wish to use OpenGL. Should this apply to you, edit the line below in the `Assets/Plugins/iOS/zappar-unity.h` file:
+The default graphics API on iOS is Metal, however there may be cases where you wish to use OpenGL. Should this apply to you, edit the line below in the `Packages/com.zappar.uar/Plugins/iOS/zappar-unity.h` file:
 
 ```c++
 #define ZAPPAR_METAL_SUPPORT // Comment out this line if you _do not_ want to include support for Metal. 
@@ -134,7 +135,7 @@ ZapWorks provides complete serving and hosting for your WebGL-based experiences,
 
 In order to use the UAR SDK with Unity Scriptable Render Pipeline (SRP), you'll need to update the zappar editor settings. This setting can be accessed from Zappar menu `Editor/Update Project For SRP`.
 
-![alt text](./Temp~/snap2.jpg "Zappar menu options")
+![alt text](./Temp~/editor_menu.jpg "Zappar menu options")
 
 This adds an additional scripting symbol `ZAPPAR_SRP` to the Unity project, which updates the internal zappar pipeline to support SRP rendering events. Please note if you were previously using `Standard Pipeline` you can update the existing scenefrom menu `Editor/Update Zappar Scene For SRP` as well. This option updates the camera settings.
 
@@ -144,17 +145,26 @@ If you have any missing material/shader in scene or while adding new zappar asse
 
 Once the package has been successfully added, you should see additional option in the package window to add sample examples. You should select either one of the two samples available, depending upon whether or not you are using Unity SRP.
 
-![alt text](./Temp~/snap1.jpg "UAR Package Window")
+![alt text](./Temp~/package_win.jpg "UAR Package Window")
 
 Import them to add example scenes to your main project and start zapping in no time!
 
 ## Zappar Universal AR Settings
 
-You can access additional project level settings of UAR from `Zappar/Editor/OpenUARSettings`.
+You can access additional project level settings of UAR from `Zappar/Editor/Open Universal AR Settings`.
 
-![alt text](./Temp~/snap3.jpg "UAR Project Settings")
+![alt text](./Temp~/uar_settings.jpg "UAR Project Settings")
 
 The settings currently include options to enable/disable image preview for image tracking and some debugging options.
+
+
+## Zappar Image Training in Editor
+
+To create a new image target file `*.ZPT` open the `Zappar Image Trainer` Window, which can be accessed from `Zappar/Editor/Open Image Trainer`. Default parameters here should be okay for first time use, but please note that you will need to enable `ZPT Overwrite` explicitly if the file already exists under `StreamingAssets`. Optionally you can also decide not to include image preview with `ZPT` file to minimize your build size.
+
+**Please note here the maxWidth and maxHeight refers to the training model param and doesn't resize your source or preview image. We recommend keeping it unchanged for optimum use.**
+
+![alt text](./Temp~/img_train.jpg "Image Trainer")
 
 
 ## Licensing
@@ -210,12 +220,13 @@ You can then import the resulting `.zpt` file into the following folder `Assets/
 
 Use menu option `Zappar/Instant Tracker` to place Instant world tracking prefab into your hierarchy. Instant world tracking refers to the ability to attach content to a point in the world, without using a tracking image or marker. You do not need to specify any properties to use Instant World Tracking. Simply attach your content as a child of the ZapparInstantTracking GameObject and it will appear in the correct location. The Zappar Instant Tracker prefab will keep the content in front of the camera until the user taps on the screen, at which point the content will appear to remain anchored in place. You can override this tap and place behavior as you wish. Please refer to the [Instant Tracking API](#instant-world-tracking) section for further details.
 
+**Note that this tracking is not supported in the Editor mode, due to lack of sensory data required for SLAM!**
 
 ## Extras
 
 ### Enabling Realtime Reflection
 
-![alt text](./Temp~/snap4.jpg "Realtime reflection")
+![alt text](./Temp~/real_ref.jpg "Realtime reflection")
 
 To enable the realtime reflection for your reflective materials, follow the following process:
 1. Make sure realtime reflection is enabled from Unity project settings. `Edit/ProjectSettings/Quality` and check `Realtime Reflection Probes`.

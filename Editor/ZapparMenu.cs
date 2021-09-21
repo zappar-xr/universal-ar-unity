@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Collections;
 using UnityEngine.Rendering;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
@@ -11,7 +12,10 @@ namespace Zappar.Editor
 {
     public class ZapparMenu : MonoBehaviour
     {
-        private static ListRequest packageListRequest = null;
+        private static ListRequest s_packageListRequest = null;
+        private static AddRequest s_importRequest = null;
+        private delegate void PackageListUpdated(ListRequest request);
+        private static PackageListUpdated OnPackageListUpdated;
 
         [MenuItem("Zappar/Camera")]
         static void ZapparCreateCamera()
@@ -87,7 +91,7 @@ namespace Zappar.Editor
             Application.OpenURL("https://docs.zap.works/universal-ar/unity");
         }
 
-        [MenuItem("Zappar/Editor/OpenUARSettings", false, 1)]
+        [MenuItem("Zappar/Editor/Open Universal AR Settings", false, 1)]
         static void ZapparOpenUarSettings()
         {
             SettingsService.OpenProjectSettings("Project/ZapparUARSettings");
@@ -167,39 +171,63 @@ namespace Zappar.Editor
             }
 
             //Check if Universal Rendering package has been imported already
-            packageListRequest = Client.List(true, true);
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = UnityRenderPipelineCheck;
             EditorApplication.update += PackageProgress;
-
+            
             PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols + ";" + zapparSrp);
+            Debug.Log("Done!");
         }
 #endif
 
+        private static void UnityRenderPipelineCheck(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.unity.render-pipelines.universal"))
+                    { avail = true; break; }
+                }
+
+                if (!avail)
+                {
+                    //Raise dialog to import URP
+                    EditorUtility.DisplayDialog("Zappar Notification", "Missing Unity Universal Rendering Pipeline package! Please add the package to your project!", "OK");
+                }
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for Universal Rendering package. Error: " + request.Error.message);
+            }
+        }
 
         private static void PackageProgress()
         {
-            if(packageListRequest!= null && packageListRequest.IsCompleted)
+            if(s_packageListRequest!= null && s_packageListRequest.IsCompleted)
             {
-                if(packageListRequest.Status == StatusCode.Success)
-                {
-                    bool avail = false;
-                    foreach(var pack in packageListRequest.Result)
-                    {
-                        if (pack.packageId.ToLower().Contains("com.unity.render-pipelines.universal"))
-                        { avail = true; break; }
-                    }
+                EditorApplication.update -= PackageProgress;
+                OnPackageListUpdated.Invoke(s_packageListRequest);
+                s_packageListRequest = null;
+            }
 
-                    if(!avail)
-                    {
-                        //Raise dialog to import URP
-                        EditorUtility.DisplayDialog("Zappar Notification", "Please add the Universal Rendering Pipeline package to your project!", "OK");
-                    }
-                }else if(packageListRequest.Status >= StatusCode.Failure)
+            if (s_importRequest != null)
+            {
+                if (s_importRequest.Status == StatusCode.Failure)
                 {
-                    Debug.LogError("Failed to check for Universal Rendering package. Error: " + packageListRequest.Error.message);
+                    Debug.Log("Import ("+ s_importRequest.Result?.packageId + ") failed: " + s_importRequest.Error.message);
+                    EditorApplication.update -= PackageProgress;
+                    s_importRequest = null;
                 }
 
-                EditorApplication.update -= PackageProgress;
-                packageListRequest = null;
+                if (s_importRequest.Status == StatusCode.Success)
+                {
+                    Debug.Log("Finished importing: " + s_importRequest.Result?.packageId);
+                    EditorApplication.update -= PackageProgress;
+                    s_importRequest = null;
+                    PackageImportSettings.RefreshPackage();
+                }
             }
         }
 
@@ -215,21 +243,22 @@ namespace Zappar.Editor
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.dataCaching = true;
-
+            
             //Build Settings
             EditorUserBuildSettings.development = false;
 #if UNITY_2020_1_OR_NEWER
             PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "PROJECT:Zappar2020";
-#elif UNITY_2018_1_OR_NEWER
             PlayerSettings.WebGL.template = "PROJECT:Zappar";
+#elif UNITY_2019_1_OR_NEWER
+            PlayerSettings.WebGL.template = "PROJECT:Zappar2019";
 #else
             Debug.LogError("Please upgrade to newer versions of Unity");
 #endif
 #elif UNITY_ANDROID
 
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel23;
+
             //Build Settings
             EditorUserBuildSettings.development = false;
 #else
@@ -240,6 +269,45 @@ namespace Zappar.Editor
 #endif
 
             Debug.Log("Done updating project setting for publish");
+        }
+
+
+        [MenuItem("Zappar/Editor/Re-Import UAR Git Package", false, 3)]
+        static void ReimportUARPackage()
+        {
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = StartUARReimport;
+            EditorApplication.update += PackageProgress;
+        }
+
+        private static void StartUARReimport(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                string packageId = "";
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.zappar.uar"))
+                    { avail = true; packageId = pack.packageId; break; }
+                }
+
+                if (avail)
+                {
+
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(packageId);
+                    Debug.Log("Reimporting: " + packageId);
+                    EditorApplication.update += PackageProgress;
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog("Zappar Notification", "No Universal AR package found!", "OK");
+                }
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for Universal AR zappar package. Error: " + request.Error.message);
+            }
         }
 
         [MenuItem("Zappar/Utilities/Install CLI", false, 0)]

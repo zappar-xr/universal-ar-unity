@@ -1,6 +1,6 @@
 {
   "name": "com.zappar.uar",
-  "version": "1.1.1-preview.1",
+  "version": "1.2.0-preview.1",
   "displayName": "Universal AR",
   "description": "Unity SDK for Zappar computer vision library",
   "documentationUrl" : "https://docs.zap.works/universal-ar/unity/",

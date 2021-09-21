@@ -15,14 +15,18 @@ $zappar_support__postset: `
     _zappar_initialize = function() {
         if (typeof ZCV === 'undefined') {
             var scr = document.createElement("script");
-            scr.src="https://libs.zappar.com/zappar-cv/0.3.8/zappar-cv.js";
+            scr.src="https://libs.zappar.com/zappar-cv/0.3.11/zappar-cv.js";
             scr.addEventListener('load', function() {
                 zappar = ZCV.initialize();
                 hasInitialized = true;
             });
             document.body.appendChild(scr);
         } else {
-            zappar = ZCV.initialize();
+            if(typeof window.zappar === 'undefined' && typeof zappar === 'undefined'){
+                zappar = ZCV.initialize();
+            }else if(typeof zappar === 'undefined') {
+                zappar = window.zappar;
+            }
             hasInitialized = true;
         }
 
@@ -262,7 +266,7 @@ $zappar_support__postset: `
         var ret = zappar.pipeline_camera_frame_user_data(o);
         return ret;
     };
-	_zappar_pipeline_camera_frame_submit = function(o, data, data_size, width, height, user_data, camera_to_device_transform) {
+	_zappar_pipeline_camera_frame_submit = function(o, data, data_size, width, height, user_data, camera_to_device_transform, camera_model, user_facing) {
         var data_val = new Uint8Array(data_size);
         data_val.set(HEAPU8.subarray(data, data + data_size));
 		var width_val = width;
@@ -270,12 +274,22 @@ $zappar_support__postset: `
 		var user_data_val = user_data;
 		var camera_to_device_transform_val = new Float32Array(16);
         camera_to_device_transform_val.set(HEAPF32.subarray(camera_to_device_transform/4, 16 + camera_to_device_transform / 4));
-        var ret = zappar.pipeline_camera_frame_submit(o, data_val, width_val, height_val, user_data_val, camera_to_device_transform_val);
+		var camera_model_val = new Float32Array(16);
+        camera_model_val.set(HEAPF32.subarray(camera_model/4, 16 + camera_model / 4));
+		var user_facing_val = user_facing;
+        var ret = zappar.pipeline_camera_frame_submit(o, data_val, width_val, height_val, user_data_val, camera_to_device_transform_val, camera_model_val, user_facing_val);
         return ret;
     };
 	_zappar_pipeline_camera_frame_camera_attitude = function(o) {
         
         var ret = zappar.pipeline_camera_frame_camera_attitude(o);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_pipeline_camera_frame_device_attitude = function(o) {
+        
+        var ret = zappar.pipeline_camera_frame_device_attitude(o);
         var buffer = _malloc(16 * 4);
         HEAPF32.set(ret, buffer / 4);
         return buffer;
@@ -309,6 +323,42 @@ $zappar_support__postset: `
         var ret = zappar.pipeline_motion_attitude_submit(o, time_val, x_val, y_val, z_val);
         return ret;
     };
+	_zappar_pipeline_motion_attitude_matrix_submit = function(o, mat) {
+        var mat_val = new Float32Array(16);
+        mat_val.set(HEAPF32.subarray(mat/4, 16 + mat / 4));
+        var ret = zappar.pipeline_motion_attitude_matrix_submit(o, mat_val);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_start = function(o, expected_frames) {
+        var expected_frames_val = expected_frames;
+        var ret = zappar.pipeline_sequence_record_start(o, expected_frames_val);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_stop = function(o) {
+        
+        var ret = zappar.pipeline_sequence_record_stop(o);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_device_attitude_matrices_set = function(o, val) {
+        var val_val = val;
+        var ret = zappar.pipeline_sequence_record_device_attitude_matrices_set(o, val_val);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_data = function(o) {
+        
+        var ret = zappar.pipeline_sequence_record_data(o);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_data_size = function(o) {
+        
+        var ret = zappar.pipeline_sequence_record_data_size(o);
+        return ret;
+    };
+	_zappar_pipeline_sequence_record_clear = function(o) {
+        
+        var ret = zappar.pipeline_sequence_record_clear(o);
+        return ret;
+    };
     
 	
     _zappar_camera_source_create = function(pipeline, device_id) {
@@ -330,6 +380,34 @@ $zappar_support__postset: `
 	_zappar_camera_source_pause = function(o) {
         
         var ret = zappar.camera_source_pause(o);
+        return ret;
+    };
+    
+	
+    _zappar_sequence_source_create = function(pipeline) {
+        var pipeline_val = pipeline;
+        var ret = zappar.sequence_source_create(pipeline_val);
+        return ret;
+    };
+    _zappar_sequence_source_destroy = function(o) {
+        var o_val = o;
+        var ret = zappar.sequence_source_destroy(o_val);
+        return ret;
+    };
+    _zappar_sequence_source_start = function(o) {
+        
+        var ret = zappar.sequence_source_start(o);
+        return ret;
+    };
+	_zappar_sequence_source_pause = function(o) {
+        
+        var ret = zappar.sequence_source_pause(o);
+        return ret;
+    };
+	_zappar_sequence_source_load_from_memory = function(o, data, data_size) {
+        var data_val = new Uint8Array(data_size);
+        data_val.set(HEAPU8.subarray(data, data + data_size));
+        var ret = zappar.sequence_source_load_from_memory(o, data_val);
         return ret;
     };
     
@@ -903,6 +981,9 @@ $zappar_support__postset: `
     zappar_pipeline_camera_frame_camera_attitude: function() {},
     zappar_pipeline_camera_frame_camera_attitude__deps: ['$zappar_support'],
 	
+    zappar_pipeline_camera_frame_device_attitude: function() {},
+    zappar_pipeline_camera_frame_device_attitude__deps: ['$zappar_support'],
+	
     zappar_pipeline_camera_frame_user_facing: function() {},
     zappar_pipeline_camera_frame_user_facing__deps: ['$zappar_support'],
 	
@@ -914,6 +995,27 @@ $zappar_support__postset: `
 	
     zappar_pipeline_motion_attitude_submit: function() {},
     zappar_pipeline_motion_attitude_submit__deps: ['$zappar_support'],
+	
+    zappar_pipeline_motion_attitude_matrix_submit: function() {},
+    zappar_pipeline_motion_attitude_matrix_submit__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_start: function() {},
+    zappar_pipeline_sequence_record_start__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_stop: function() {},
+    zappar_pipeline_sequence_record_stop__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_device_attitude_matrices_set: function() {},
+    zappar_pipeline_sequence_record_device_attitude_matrices_set__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_data: function() {},
+    zappar_pipeline_sequence_record_data__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_data_size: function() {},
+    zappar_pipeline_sequence_record_data_size__deps: ['$zappar_support'],
+	
+    zappar_pipeline_sequence_record_clear: function() {},
+    zappar_pipeline_sequence_record_clear__deps: ['$zappar_support'],
 	zappar_camera_source_create: function() {},
     zappar_camera_source_create__deps: ['$zappar_support'],
     zappar_camera_source_destroy: function() {},
@@ -924,6 +1026,19 @@ $zappar_support__postset: `
 	
     zappar_camera_source_pause: function() {},
     zappar_camera_source_pause__deps: ['$zappar_support'],
+	zappar_sequence_source_create: function() {},
+    zappar_sequence_source_create__deps: ['$zappar_support'],
+    zappar_sequence_source_destroy: function() {},
+    zappar_sequence_source_destroy__deps: ['$zappar_support'],
+    
+    zappar_sequence_source_start: function() {},
+    zappar_sequence_source_start__deps: ['$zappar_support'],
+	
+    zappar_sequence_source_pause: function() {},
+    zappar_sequence_source_pause__deps: ['$zappar_support'],
+	
+    zappar_sequence_source_load_from_memory: function() {},
+    zappar_sequence_source_load_from_memory__deps: ['$zappar_support'],
 	zappar_image_tracker_create: function() {},
     zappar_image_tracker_create__deps: ['$zappar_support'],
     zappar_image_tracker_destroy: function() {},

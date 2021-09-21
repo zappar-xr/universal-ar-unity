@@ -9,10 +9,16 @@ namespace Zappar
     {
         public Material faceMaterial;
 
-        void Start()
+        private bool usingFullHead = true;
+
+        private void Awake()
         {
             InitCoeffs();
+            usingFullHead = useDefaultFullHead;
+        }
 
+        void Start()
+        {
             if (ZapparCamera.Instance != null)
                 ZapparCamera.Instance.RegisterCameraListener(this);
 
@@ -20,9 +26,30 @@ namespace Zappar
             {
                 //Create new face model
                 m_faceMesh = Z.FaceMeshCreate();
-                CreateMesh();
+                CreateMesh(true);
             }
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            UnityEditor.EditorApplication.delayCall += CheckForHeadMeshUpdate;
+        }
+
+        private void CheckForHeadMeshUpdate()
+        {
+            if (usingFullHead != useDefaultFullHead)
+            {
+                if (m_faceMesh != IntPtr.Zero)
+                    Z.FaceMeshDestroy(m_faceMesh);
+
+                DestroyUnityMesh();
+                m_faceMesh = Z.FaceMeshCreate();
+                CreateMesh();
+                usingFullHead = useDefaultFullHead;
+            }
+        }
+#endif
 
         public void OnEnable()
         {

@@ -23,6 +23,10 @@ public static class Config
 #else                       
     public const string PluginName = "__Internal";
 #endif
+
+#if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
+    public const string ImageTrainPlugin = "ImageTraining";
+#endif
 }
 
 public class Z
@@ -80,6 +84,21 @@ public class Z
     public static extern void SetLogFunc(DebugLogDelegate func);
     [DllImport(Config.PluginName, EntryPoint = "ZapparSetErrorFunc")]
     public static extern void SetErrorFunc(DebugLogDelegate func);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FileData
+    {
+        public IntPtr data;
+        public int length;
+    }
+
+    [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int TrainImageCompressed(ref FileData compressed, ref FileData zpt, ref FileData preview, int preview_is_jpeg);
+    [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int TrainImageCompressedWithMax(ref FileData compressed, ref FileData zpt, ref FileData preview, int preview_is_jpeg, int max_width, int max_height);
+    [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void TrainImageFreeFileData(ref FileData d);
+    
 #endif
 
     private const string ZCVResourcesPath = "Packages/com.zappar.uar/Contents/";
@@ -197,9 +216,11 @@ public class Z
     [DllImport(Config.PluginName)]
     private static extern int zappar_pipeline_camera_frame_user_data(IntPtr o);
     [DllImport(Config.PluginName)]
-    private static extern void zappar_pipeline_camera_frame_submit(IntPtr o, byte[] data, int size, int width, int height, int user_data, float[] camera_to_device_transform);
+    private static extern void zappar_pipeline_camera_frame_submit(IntPtr o, byte[] data, int size, int width, int height, int user_data, float[] camera_to_device_transform, float[] camera_model, int user_facing);
     [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_pipeline_camera_frame_camera_attitude(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_pipeline_camera_frame_device_attitude(IntPtr o);
     [DllImport(Config.PluginName)]
     private static extern int zappar_pipeline_camera_frame_user_facing(IntPtr o);
     [DllImport(Config.PluginName)]
@@ -208,6 +229,20 @@ public class Z
     private static extern void zappar_pipeline_motion_rotation_rate_submit(IntPtr o, double time, float x, float y, float z);
     [DllImport(Config.PluginName)]
     private static extern void zappar_pipeline_motion_attitude_submit(IntPtr o, double time, float x, float y, float z);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_pipeline_motion_attitude_matrix_submit(IntPtr o, float[] mat);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_pipeline_sequence_record_start(IntPtr o, int expected_frames);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_pipeline_sequence_record_stop(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_pipeline_sequence_record_device_attitude_matrices_set(IntPtr o, int val);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_pipeline_sequence_record_data(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern int zappar_pipeline_sequence_record_data_size(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_pipeline_sequence_record_clear(IntPtr o);
     
 
         [DllImport(Config.PluginName)]
@@ -219,6 +254,19 @@ public class Z
     private static extern void zappar_camera_source_start(IntPtr o);
     [DllImport(Config.PluginName)]
     private static extern void zappar_camera_source_pause(IntPtr o);
+    
+
+        [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_sequence_source_create(IntPtr pipeline);
+        [DllImport(Config.PluginName)]
+    private static extern void zappar_sequence_source_destroy(IntPtr o);
+
+        [DllImport(Config.PluginName)]
+    private static extern void zappar_sequence_source_start(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_sequence_source_pause(IntPtr o);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_sequence_source_load_from_memory(IntPtr o, byte[] data, int size);
     
 
         [DllImport(Config.PluginName)]
@@ -467,10 +515,11 @@ public class Z
         return zappar_has_initialized() == 1 ? true : false;
     }
 
-    public static Matrix4x4 PipelineProjectionMatrix(IntPtr o, int renderWidth, int renderHeight) {
-        float[] model = PipelineCameraModel(o);
-        if (model[0] == 0) return Matrix4x4.identity;
-        return ProjectionMatrixFromCameraModel( model, renderWidth, renderHeight);
+    public static Matrix4x4 PipelineProjectionMatrix(IntPtr o, int renderWidth, int renderHeight, float zNear, float zFar, ref float[] cameraModel) {
+        IntPtr ret = zappar_pipeline_camera_model(o);
+        Marshal.Copy(ret, cameraModel, 0, 6);
+        if (cameraModel[0] == 0) return Matrix4x4.identity;
+        return ProjectionMatrixFromCameraModelExt(cameraModel, renderWidth, renderHeight, zNear, zFar);
     }
 
     public static Matrix4x4 WorldToCameraMatrix() {
@@ -883,7 +932,7 @@ public class Z
         int ret = zappar_pipeline_camera_frame_user_data(o);
         return ret;
     }
-	public static void PipelineCameraFrameSubmit(IntPtr o, byte[] data, int width, int height, int user_data, Matrix4x4 camera_to_device_transform) {
+	public static void PipelineCameraFrameSubmit(IntPtr o, byte[] data, int width, int height, int user_data, Matrix4x4 camera_to_device_transform, Matrix4x4 camera_model, bool user_facing) {
         
 	
 	
@@ -893,12 +942,28 @@ public class Z
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
                 arg_camera_to_device_transform[i * 4 + k] = camera_to_device_transform[k, i];
-        zappar_pipeline_camera_frame_submit(o, data, data.Length, width, height, user_data, arg_camera_to_device_transform);
+	float[] arg_camera_model = new float[16];
+        for (int i = 0; i < 4; i++)
+            for (int k = 0; k < 4; k++)
+                arg_camera_model[i * 4 + k] = camera_model[k, i];
+	
+        zappar_pipeline_camera_frame_submit(o, data, data.Length, width, height, user_data, arg_camera_to_device_transform, arg_camera_model, user_facing ? 1 : 0);
         
     }
 	public static Matrix4x4 PipelineCameraFrameCameraAttitude(IntPtr o) {
         
         IntPtr ret = zappar_pipeline_camera_frame_camera_attitude(o);
+        float[] retFloats = new float[16];
+        Marshal.Copy(ret, retFloats, 0, 16);
+        Matrix4x4 retMatrix = new Matrix4x4();
+        for (int i = 0; i < 4; i++)
+            for (int k = 0; k < 4; k++)
+                retMatrix[k, i] = retFloats[i * 4 + k];
+        return retMatrix;
+    }
+	public static Matrix4x4 PipelineCameraFrameDeviceAttitude(IntPtr o) {
+        
+        IntPtr ret = zappar_pipeline_camera_frame_device_attitude(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
         Matrix4x4 retMatrix = new Matrix4x4();
@@ -939,6 +1004,50 @@ public class Z
         zappar_pipeline_motion_attitude_submit(o, time, x, y, z);
         
     }
+	public static void PipelineMotionAttitudeMatrixSubmit(IntPtr o, Matrix4x4 mat) {
+        
+	float[] arg_mat = new float[16];
+        for (int i = 0; i < 4; i++)
+            for (int k = 0; k < 4; k++)
+                arg_mat[i * 4 + k] = mat[k, i];
+        zappar_pipeline_motion_attitude_matrix_submit(o, arg_mat);
+        
+    }
+	public static void PipelineSequenceRecordStart(IntPtr o, int expected_frames) {
+        
+	
+        zappar_pipeline_sequence_record_start(o, expected_frames);
+        
+    }
+	public static void PipelineSequenceRecordStop(IntPtr o) {
+        
+        zappar_pipeline_sequence_record_stop(o);
+        
+    }
+	public static void PipelineSequenceRecordDeviceAttitudeMatricesSet(IntPtr o, bool val) {
+        
+	
+        zappar_pipeline_sequence_record_device_attitude_matrices_set(o, val ? 1 : 0);
+        
+    }
+	public static byte[] PipelineSequenceRecordData(IntPtr o) {
+        
+        IntPtr ret = zappar_pipeline_sequence_record_data(o);
+        int N = PipelineSequenceRecordDataSize(o);
+        byte[] retBytes = new byte[N];
+        Marshal.Copy(ret, retBytes, 0, N);
+        return retBytes;
+    }
+	public static int PipelineSequenceRecordDataSize(IntPtr o) {
+        
+        int ret = zappar_pipeline_sequence_record_data_size(o);
+        return ret;
+    }
+	public static void PipelineSequenceRecordClear(IntPtr o) {
+        
+        zappar_pipeline_sequence_record_clear(o);
+        
+    }
 	public static void CameraSourceStart(IntPtr o) {
         
         zappar_camera_source_start(o);
@@ -947,6 +1056,22 @@ public class Z
 	public static void CameraSourcePause(IntPtr o) {
         
         zappar_camera_source_pause(o);
+        
+    }
+	public static void SequenceSourceStart(IntPtr o) {
+        
+        zappar_sequence_source_start(o);
+        
+    }
+	public static void SequenceSourcePause(IntPtr o) {
+        
+        zappar_sequence_source_pause(o);
+        
+    }
+	public static void SequenceSourceLoadFromMemory(IntPtr o, byte[] data) {
+        
+	
+        zappar_sequence_source_load_from_memory(o, data, data.Length);
         
     }
 	public static void ImageTrackerTargetLoadFromMemory(IntPtr o, byte[] data) {
@@ -1414,6 +1539,10 @@ public class Z
     {
         return zappar_camera_source_create(pipeline,device_id);
     }
+	public static IntPtr SequenceSourceCreate(IntPtr pipeline) 
+    {
+        return zappar_sequence_source_create(pipeline);
+    }
 	public static IntPtr ImageTrackerCreate(IntPtr pipeline) 
     {
         return zappar_image_tracker_create(pipeline);
@@ -1445,6 +1574,10 @@ public class Z
 	public static void CameraSourceDestroy(IntPtr o)
     {
         zappar_camera_source_destroy(o);
+    }
+	public static void SequenceSourceDestroy(IntPtr o)
+    {
+        zappar_sequence_source_destroy(o);
     }
 	public static void ImageTrackerDestroy(IntPtr o)
     {

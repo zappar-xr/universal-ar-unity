@@ -5,7 +5,7 @@ namespace Zappar
 {
     public class ZapparInstantTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
     {
-        private IntPtr m_instantTracker = IntPtr.Zero;
+        public IntPtr m_instantTracker = IntPtr.Zero;
         private bool m_userHasPlaced = false;
         private bool m_hasInitialised = false;
         private bool m_isMirrored = false;

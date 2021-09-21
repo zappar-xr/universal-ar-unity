@@ -86,10 +86,27 @@ namespace Zappar.Editor
 
             if (myScript.PreviewImagePlane == null)
             {
-                myScript.PreviewImagePlane = GameObject.CreatePrimitive(PrimitiveType.Quad) as GameObject;
-                Undo.RegisterCreatedObjectUndo(myScript.PreviewImagePlane, "New preview object");
-                myScript.PreviewImagePlane.name = "Preview Image";
-                myScript.PreviewImagePlane.transform.SetParent(myScript.transform);
+                GameObject plane = null;
+                for (int i = 0; i < myScript.transform.childCount; ++i)
+                {
+                    if (myScript.transform.GetChild(i).gameObject.name == "Preview Image")
+                    {
+                        plane = myScript.transform.GetChild(i).gameObject;
+                        if (plane.GetComponent<MeshFilter>() == null) plane = null;
+                    }
+                }
+                if (plane == null)
+                {
+                    myScript.PreviewImagePlane = GameObject.CreatePrimitive(PrimitiveType.Quad) as GameObject;
+                    Undo.RegisterCreatedObjectUndo(myScript.PreviewImagePlane, "New preview object");
+                    myScript.PreviewImagePlane.name = "Preview Image";
+                    myScript.PreviewImagePlane.transform.SetParent(myScript.transform);
+                }
+                else
+                {
+                    myScript.PreviewImagePlane = plane;
+                    EditorUtility.SetDirty(myScript.gameObject);
+                }
             }
 
             myScript.PreviewImagePlane.transform.localEulerAngles = myScript.Orientation == ZapparImageTrackingTarget.PlaneOrientation.Flat ?

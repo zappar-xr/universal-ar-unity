@@ -17,7 +17,7 @@ namespace Zappar
 
         public ZapparFaceTrackingTarget faceTracker;
 
-        protected Mesh m_mesh;
+        protected Mesh m_mesh = null;
         private bool m_haveInitialisedFaceMesh = false;
 
         private bool m_isMirrored;
@@ -35,8 +35,8 @@ namespace Zappar
 
         public void InitCoeffs()
         {
-            m_identity = new float[m_numIdentityCoefficients];
-            m_expression = new float[m_numExpressionCoefficients];
+            m_identity = m_identity ?? new float[m_numIdentityCoefficients];
+            m_expression = m_expression ?? new float[m_numExpressionCoefficients];
             for (int i = 0; i < m_numIdentityCoefficients; ++i) m_identity[i] = 0.0f;
             for (int i = 0; i < m_numExpressionCoefficients; ++i) m_expression[i] = 0.0f;
         }
@@ -69,18 +69,19 @@ namespace Zappar
             m_haveInitialisedFaceMesh = false;
         }
 
-        protected void CreateMesh()
+        protected void CreateMesh(bool force=false)
         {
-            if (m_mesh != null)
+            if (m_mesh != null && !force)
                 return;
-            
+
+            DestroyUnityMesh();
             LoadMeshData();
 
             m_mesh = new Mesh();
+            m_mesh.name = "ZFaceMesh" + (useDefaultFullHead ? "_Full" : "");
             gameObject.GetComponent<MeshFilter>().sharedMesh = m_mesh;
 
             UpdateMaterial();
-
             UpdateMeshData();
         }
 
@@ -124,10 +125,7 @@ namespace Zappar
 
             if (!m_haveFaceTracker)
             {
-                m_identity = new float[m_numIdentityCoefficients];
-                m_expression = new float[m_numExpressionCoefficients];
-                for (int i = 0; i < m_numIdentityCoefficients; ++i) m_identity[i] = 0.0f;
-                for (int i = 0; i < m_numExpressionCoefficients; ++i) m_expression[i] = 0.0f;
+                InitCoeffs();
             }
             else
             {
@@ -166,8 +164,15 @@ namespace Zappar
 
         void OnDestroy()
         {
-            if (m_faceMesh != null)
+            if (m_faceMesh != null && Application.isPlaying)
                 Z.FaceMeshDestroy(m_faceMesh);
+
+            DestroyUnityMesh();
+            m_hasInitialised = false;
+        }
+
+        protected void DestroyUnityMesh()
+        {
 #if UNITY_EDITOR
             if (Application.isPlaying)
                 Destroy(m_mesh);
@@ -177,7 +182,8 @@ namespace Zappar
             Destroy(m_mesh);
 #endif
             m_haveInitialisedFaceMesh = false;
-            m_hasInitialised = false;
+            m_faceVertices = null;
+            m_faceNormals = null;
         }
     }
 }
