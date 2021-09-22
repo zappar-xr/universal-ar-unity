@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.2.0-preview.1] - 2021-09-20
 ### Added
-- Zappar image training in editor
-- Renamed WebGL templates to - `Zappar` (for Unity version 2020 and above) and `Zappar2019` (for Unity version 2019.x)
+- Zappar image training in editor.
+- Renamed WebGL templates to - `Zappar` (for Unity version 2020 and above) and `Zappar2019` (for Unity version 2019.x).
+- Exempt additional IP addresses ranging from 172.16.* through 172.32.* from licensing check.
 
 ### Fixed
 - White screen issue after loading progress on Safari browsers.
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix referencing image preview when project GUID has been updated. [Note: finds reference using gameobject name and meshfilter component]
 - Fix camera pause/resume when switching to other tabs and back.
 - Improve HTML template CSS to better fit the full browser window.
+- Issues with other/embedded browsers on iOS, including social browsers.
 
 
 ## [1.1.1-preview.1] - 2021-07-14
