@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improve HTML template CSS to better fit the full browser window.
 - Issues with other/embedded browsers on iOS, including social browsers.
 
+### Known issues
+ - Sometimes the app freezes on iOS browser while switching between tabs. To workaround this make sure to check - `Run In Background` setting from `Project Settings > Player > Resolution And Presentation`.
 
 ## [1.1.1-preview.1] - 2021-07-14
 ### Added
