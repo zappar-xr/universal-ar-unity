@@ -235,42 +235,14 @@ namespace Zappar.Editor
         static void ZapparPublishSettings()
         {
 #if UNITY_WEBGL
-            // Other Settings
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP); //default is IL2CPP
-            PlayerSettings.stripEngineCode = true;
-
-            //Publishing settings
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
-            PlayerSettings.WebGL.dataCaching = true;
-            
-            //Build Settings
-            EditorUserBuildSettings.development = false;
-#if UNITY_2020_1_OR_NEWER
-            PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "PROJECT:Zappar";
-#elif UNITY_2019_1_OR_NEWER
-            PlayerSettings.WebGL.template = "PROJECT:Zappar2019";
-#else
-            Debug.LogError("Please upgrade to newer versions of Unity");
-#endif
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.WebGLAll);
 #elif UNITY_ANDROID
-
-            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel23;
-
-            //Build Settings
-            EditorUserBuildSettings.development = false;
-#else
-            PlayerSettings.stripEngineCode = true;
-
-            //Build Settings
-            EditorUserBuildSettings.development = false;
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.AndroidAll);
+#elif UNITY_IOS
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.IosAll);
 #endif
-
-            Debug.Log("Done updating project setting for publish");
+            Debug.Log("Done updating editor related project settings for publish");
         }
-
 
         [MenuItem("Zappar/Editor/Re-Import UAR Git Package", false, 3)]
         static void ReimportUARPackage()

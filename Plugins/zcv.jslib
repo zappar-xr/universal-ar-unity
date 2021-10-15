@@ -15,7 +15,7 @@ $zappar_support__postset: `
     _zappar_initialize = function() {
         if (typeof ZCV === 'undefined') {
             var scr = document.createElement("script");
-            scr.src="https://libs.zappar.com/zappar-cv/0.3.11/zappar-cv.js";
+            scr.src="https://libs.zappar.com/zappar-cv/0.3.12/zappar-cv.js";
             scr.addEventListener('load', function() {
                 zappar = ZCV.initialize();
                 hasInitialized = true;
@@ -846,6 +846,8 @@ $zappar_support__postset: `
 
     zappar_initialize: function() {},
     zappar_initialize__deps: ['$zappar_support'],
+
+    zappar_is_visible_webgl: function () { return document.visibilityState === "visible"; },
 
     zappar_pipeline_gl_context_set: function() {},
     zappar_pipeline_gl_context_set__deps: ['$zappar_support'],

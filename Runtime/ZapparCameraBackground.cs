@@ -28,6 +28,7 @@ namespace Zappar
             {
                 Debug.LogError("Can't render camera texture: Missing Zappar/CameraBackgroundShader!");
             }
+            m_CameraMaterial.mainTexture = Texture2D.blackTexture;
             textureMatrix = new Matrix4x4();
             textureMatElements = new float[16];
             backgroundCamera = GetComponent<Camera>();
@@ -90,6 +91,8 @@ namespace Zappar
                 m_Initialised = Z.HasInitialized() && mainCamera.CameraHasStarted;
                 return;
             }
+
+            if (mainCamera.CameraSourcePaused) return;
 
             backgroundCamera.projectionMatrix = Z.PipelineProjectionMatrix(ZapparCamera.Instance.GetPipeline, Screen.width, Screen.height, backgroundCamera.nearClipPlane, backgroundCamera.farClipPlane, ref m_camerModel);
 

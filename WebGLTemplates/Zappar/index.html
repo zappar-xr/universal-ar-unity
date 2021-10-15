@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>{{{ PRODUCT_NAME }}}</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.11/zappar-cv.js"></script>
     <style>
         html {
             box-sizing: border-box;
@@ -131,6 +130,7 @@
             <div class="spinner"></div>
         </div>
     </div>
+    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.12/zappar-cv.js"></script>
     <script>
         var db = indexedDB.open("dummy_indexdb", 1); // iOS 14.6 fix; the call to open indexdb hangs forever otherwise
 
@@ -161,7 +161,9 @@
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             container.className = "unity-mobile";
-            config.devicePixelRatio = 1;
+            //config.matchWebGLToCanvasSize = false;    
+            //set devicePixelRatio=1; to avoid draining fillrate performance on mobile and override low DPI mode
+            config.devicePixelRatio = window.devicePixelRatio;
         }
 #if BACKGROUND_FILENAME
         canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";

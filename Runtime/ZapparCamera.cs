@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Zappar
 {
@@ -46,12 +45,9 @@ namespace Zappar
         private float[] m_cameraModel = null;
         private List<ICameraListener> listeners = new List<ICameraListener>();
 
-        #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")]
-        private static extern bool ZapparIsVisible();
-        private bool m_isVisibilityPaused = false;
-        #endif
-        
+        private bool m_cameraSrcPaused = false;
+        public bool CameraSourcePaused => m_cameraSrcPaused;
+
         #region unity_methods
 
         void Awake()
@@ -80,17 +76,17 @@ namespace Zappar
 
         void Update()
         {
-            #if UNITY_WEBGL && !UNITY_EDITOR
-            if (ZapparIsVisible()) {
-                if (m_cameraHasStarted && m_isVisibilityPaused) {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (Z.ZapparInFocus()) {
+                if (m_cameraHasStarted && m_cameraSrcPaused) {
                     Z.CameraSourceStart(m_camera);
-                    m_isVisibilityPaused = false;
+                    m_cameraSrcPaused = false;
                 }
-            } else if (m_cameraHasStarted && !m_isVisibilityPaused) {
+            } else if (m_cameraHasStarted && !m_cameraSrcPaused) {
                 Z.CameraSourcePause(m_camera);
-                m_isVisibilityPaused = true;
+                m_cameraSrcPaused = true;
             }
-            #endif
+#endif
 
             // If we haven't yet initialised the Zappar library.
             if (!m_hasInitialised)
@@ -146,7 +142,7 @@ namespace Zappar
                 }
 
                 // initialised, permissions granted, and camera started
-                else
+                else if(!m_cameraSrcPaused)
                 {
                     Z.Process(m_pipeline);
                     Z.PipelineFrameUpdate(m_pipeline);

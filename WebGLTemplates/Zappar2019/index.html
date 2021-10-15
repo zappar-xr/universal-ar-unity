@@ -7,7 +7,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>%UNITY_WEB_NAME%</title>
-    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.11/zappar-cv.js"></script>
     <style>
         html {
             box-sizing: border-box;
@@ -76,50 +75,52 @@
 </head>
 
 <body>
+    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.12/zappar-cv.js"></script>
+
     <div id="gameContainer"></div>
     <div id="loader">
         <div class="progress">
             <div class="full"></div>
         </div>
     </div>
+
+    <script src="%UNITY_WEBGL_LOADER_URL%"></script>
+    <script>
+        var db = indexedDB.open("dummy_indexdb", 1); // iOS 14.6 fix; the call to open indexdb hangs forever otherwise
+        window.zappar=ZCV.initialize();
+        const loader = document.querySelector("#loader");
+        var gameInstance; //= UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", { onProgress: UnityProgress }); 
+
+        WaitForZCVLoad();
+
+        function WaitForZCVLoad(){            
+            if (zappar.loaded()) { 
+                //loader.style.display = "none";  
+                gameInstance= UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", { onProgress: UnityProgress }); 
+                return; 
+            }
+            setTimeout(WaitForZCVLoad, 500);
+        }
+
+        function UnityProgress(gameInstance, progress) {
+            if (!gameInstance.Module) {
+                return;
+            }
+            if (!gameInstance.progress) {
+                const progress = document.querySelector("#loader .progress");
+                progress.style.display = "block";
+                gameInstance.progress = progress.querySelector(".full");
+            }
+            gameInstance.progress.style.transform = `scaleX(${progress})`;
+            if (progress === 1 && !gameInstance.removeTimeout) {
+                gameInstance.removeTimeout = setTimeout(function () {
+                    loader.style.display = "none";
+                    //WaitForZCVLoad();
+                }, 0); // optionally set a delay in here.
+            }
+        }
+
+    </script>
 </body>
-
-<script src="%UNITY_WEBGL_LOADER_URL%"></script>
-<script>
-    var db = indexedDB.open("dummy_indexdb", 1); // iOS 14.6 fix; the call to open indexdb hangs forever otherwise
-    window.zappar=ZCV.initialize();
-    const loader = document.querySelector("#loader");
-    var gameInstance; //= UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", { onProgress: UnityProgress }); 
-    
-    WaitForZCVLoad();
-
-    function WaitForZCVLoad(){            
-        if (zappar.loaded()) { 
-            //loader.style.display = "none";  
-            gameInstance= UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", { onProgress: UnityProgress }); 
-            return; 
-        }
-        setTimeout(WaitForZCVLoad, 500);
-    }
-
-    function UnityProgress(gameInstance, progress) {
-        if (!gameInstance.Module) {
-            return;
-        }
-        if (!gameInstance.progress) {
-            const progress = document.querySelector("#loader .progress");
-            progress.style.display = "block";
-            gameInstance.progress = progress.querySelector(".full");
-        }
-        gameInstance.progress.style.transform = `scaleX(${progress})`;
-        if (progress === 1 && !gameInstance.removeTimeout) {
-            gameInstance.removeTimeout = setTimeout(function () {
-                loader.style.display = "none";
-                //WaitForZCVLoad();
-            }, 0); // optionally set a delay in here.
-        }
-    }
-
-</script>
 
 </html>

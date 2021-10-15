@@ -470,6 +470,11 @@ public class Z
     private static extern IntPtr zappar_process_callback_gl();
 #endif
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport ("__Internal")]
+    private static extern bool zappar_is_visible_webgl();
+#endif
+
 #if UNITY_ANDROID && !UNITY_EDITOR
     [DllImport("ZCVAndroidRenderPlugin")]        
 #else
@@ -477,19 +482,15 @@ public class Z
 #endif
     private static extern IntPtr zappar_upload_callback_native_gl();
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [DllImport("ZCVAndroidRenderPlugin")]        
-#else
+#if UNITY_IOS || UNITY_EDITOR_OSX
     [DllImport(Config.PluginName)]
-#endif
     private static extern IntPtr zappar_upload_callback_native_metal();
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [DllImport("ZCVAndroidRenderPlugin")]        
-#else
-    [DllImport(Config.PluginName)]
 #endif
+
+#if UNITY_EDITOR_WIN
+    [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_upload_callback_native_dx11();
+#endif
 
 #if UNITY_WEBGL
     [DllImport(Config.PluginName)]
@@ -513,6 +514,14 @@ public class Z
 
     public static bool HasInitialized() {
         return zappar_has_initialized() == 1 ? true : false;
+    }
+
+    public static bool ZapparInFocus()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return zappar_is_visible_webgl();
+#endif
+        return true;
     }
 
     public static Matrix4x4 PipelineProjectionMatrix(IntPtr o, int renderWidth, int renderHeight, float zNear, float zFar, ref float[] cameraModel) {
@@ -554,13 +563,13 @@ public class Z
         {
             ptr = zappar_pipeline_camera_frame_texture_gl(o);
         }
-        
+#if UNITY_IOS || UNITY_EDITOR_OSX
         if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal)
             ptr = zappar_pipeline_camera_frame_texture_metal(o);
-
+#elif UNITY_EDITOR_WIN
         if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11)
             ptr = zappar_pipeline_camera_frame_texture_dx11(o);
-
+#endif
         if (ptr != IntPtr.Zero)
         {
             if (!m_texturePool.TryGetValue(ptr, out texture))
@@ -582,18 +591,19 @@ public class Z
             zappar_pipeline_set(pipeline);
             GL.IssuePluginEvent(zappar_upload_callback_native_gl(), 1);
         }
-
+#if UNITY_EDITOR_WIN
         if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11) 
         {
             zappar_pipeline_set(pipeline);
             GL.IssuePluginEvent(zappar_upload_callback_native_dx11(), 1);
         }
-
+#elif UNITY_IOS || UNITY_EDITOR_OSX
         if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal) 
         {
             zappar_pipeline_set(pipeline);
             GL.IssuePluginEvent(zappar_upload_callback_native_metal(), 1);
         }
+#endif
     }
 
     private static string GetValidZPTFilename(string filename)
