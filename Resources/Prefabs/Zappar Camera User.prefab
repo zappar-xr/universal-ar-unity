@@ -98,10 +98,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorOrigin: {fileID: 0}
-  useFrontFacingCamera: 1
-  cameraAttitudeFromGyro: 0
-  mirrorRearCameras: 0
-  mirrorUserCameras: 1
+  UseFrontFacingCamera: 1
+  CameraAttitudeFromGyro: 0
+  MirrorRearCameras: 0
+  MirrorUserCameras: 1
   EditorCamera: FaceTime HD Camera (Built-in)
 --- !u!1 &5176714506044225465
 GameObject:

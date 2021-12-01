@@ -37,7 +37,7 @@ namespace Zappar
 
         public static void UpdateUnityProjectSettings(ZProjectSettingsConfig config)
         {
-            var uarSettings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPath);
+            var uarSettings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPathInPackage);
 #if UNITY_WEBGL
             if (ZAssistant.MatchConfigSettings(config, ZProjectSettings.General))
             {

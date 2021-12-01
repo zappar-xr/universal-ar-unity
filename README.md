@@ -16,6 +16,7 @@ The [ZapWorks CLI](https://www.npmjs.com/package/@zappar/zapworks-cli) is a set 
 # Table of Contents
 
   * [Importing UAR package into Unity](#importing-uar-package-into-unity)
+    + [Update UAR package](#update-uar-package-to-latest-version)
   * [Platform support](#platform-support)
     + [Android](#android)
     + [iOS](#ios)
@@ -29,10 +30,12 @@ The [ZapWorks CLI](https://www.npmjs.com/package/@zappar/zapworks-cli) is a set 
     + [Zappar Camera Prefab](#zappar-camera-prefab)
     + [Face Tracker Prefab](#face-tracker-prefab)
     + [Face Mesh Prefab](#face-mesh-prefab)
+    + [Face Landmark Prefab](#face-landmark-prefab)
     + [Image Tracker Prefab](#image-tracker-prefab)
     + [Instant Tracking Prefab](#instant-tracking-prefab)
   * [Extras](#extras)
     + [Enabling Realtime Reflection](#enabling-realtime-reflection)
+    + [Multiple Face Tracking](#multiple-face-tracking)
   * [Advanced Usage](#advanced-usage)
     + [Pipelines and Camera Processing](#pipelines-and-camera-processing)
       - [Constructing and Managing Pipelines](#constructing-and-managing-pipelines)
@@ -73,6 +76,13 @@ Another option is to define the `universal-ar-unity` package as dependency in yo
 
 Note that you can modify the source github URL to define any particular `tag`, `branch` or `commit hash`, by adding suffix: `#ID` to the git URL. You can read more about it here: https://docs.unity3d.com/Manual/upm-git.html
 
+### Update UAR package to latest version
+
+In order to directly update the UAR package with the latest version on github use the following Zappar menu option `Zappar/Editor/Re-Import UAR Git Package`.
+
+![alt text](./Temp~/reimport.jpg "Update UAR Git package")
+
+Please note: we always ensure backward compatibility for new releases, however do go through the [CHANGELOG.md](https://github.com/zappar-xr/universal-ar-unity/blob/main/CHANGELOG.md) to be sure there are no breaking changes between your local version and latest version on Git.
 
 ## Platform support
 
@@ -203,6 +213,14 @@ Use menu option `Zappar/Face Mesh` to place Face Mesh prefab into your hierarchy
 
 A Zappar Face Mesh requires a Zappar Face Tracker instance as its "Face Tracker" property (in the inspector). The Face Mesh can appear anywhere in the scene hierarchy, however you should place it as a child of the Face Tracker if you wish for the mesh to appear correctly attached to the face.
 
+### Face Landmark Prefab
+
+![Face Landmark Settings](./Temp~/face_landmark.jpg)
+
+Use menu option `Zappar/Face Landmark` to place Face Landmark prefab into your hierarchy. This prefab provides a tracker for facial landmark like - left/right eye, nose tip/bridge/base, etc. User can define specific landmark via the `Landmark Name` property. The specified landmark is tracked in 3D space and respective game object's Transform is updated in scene.
+
+A Zappar Face Landmark requires a Zappar Face Tracker instance as its "Face Tracker" property (in the inspector). The Face Landmark can appear anywhere in the scene hierarchy, however you should place it as a child of the Face Tracker if you wish for the mesh to appear correctly attached to the face.
+
 
 ### Image Tracker Prefab
 
@@ -218,7 +236,11 @@ You can then import the resulting `.zpt` file into the following folder `Assets/
 
 ### Instant Tracking Prefab
 
-Use menu option `Zappar/Instant Tracker` to place Instant world tracking prefab into your hierarchy. Instant world tracking refers to the ability to attach content to a point in the world, without using a tracking image or marker. You do not need to specify any properties to use Instant World Tracking. Simply attach your content as a child of the ZapparInstantTracking GameObject and it will appear in the correct location. The Zappar Instant Tracker prefab will keep the content in front of the camera until the user taps on the screen, at which point the content will appear to remain anchored in place. You can override this tap and place behavior as you wish. Please refer to the [Instant Tracking API](#instant-world-tracking) section for further details.
+![Instant Tracking Settings](./Temp~/instant_track.jpg)
+
+Use menu option `Zappar/Instant Tracker` to place Instant world tracking prefab into your hierarchy. Instant world tracking refers to the ability to attach content to a point in the world (i.e. anchor), without using a tracking image or marker. Simply attach your content as a child of the ZapparInstantTracking GameObject and it will appear in the correct location. 
+
+The Zappar Instant Tracker prefab will keep the content in front of the camera until the user set the flag for `UserHasPlace`, at which point the content will appear to remain anchored in place. By default this behavior is mapped to user tap event (`PlaceOnTouch`), which is optional and you can instead call `ZapparInstantTrackingTarget.PlaceTrackerAnchor`. You can override this behavior as you wish. Please refer to the [Instant Tracking API](#instant-world-tracking) section for further details.
 
 **Note that this tracking is not supported in the Editor mode, due to lack of sensory data required for SLAM!**
 
@@ -233,6 +255,17 @@ To enable the realtime reflection for your reflective materials, follow the foll
 2. Enable `Enable Realtime Refections` from menu `Zappar/Editor/OpenUARSettings`. This will add a new layer `ZapparReflect` to your project.
 3. Right click on `ZapparCameraRear` (Camera object containing `ZapparCamera` script) and select `Zappar/AddRealtimeReflectionProbe`.
 4. Adjust the `ZapparReflectionProbe` properties according to your project needs.
+
+### Multiple Face Tracking
+
+![alt text](./Temp~/uar_settings.jpg "Multi face tracking")
+
+To enable concurrent tracking of multiple faces, follow the following process:
+1. Set the number of faces `Concurrent face trackers` from menu `Zappar/Editor/OpenUARSettings`. Total count would depend upon your use case and device, normally we recommend keeping this below 5.
+2. Add multiple face trackers (as per your requirement) in the unity scene `Zappar/Face Tracker`.
+3. For each face tracker set the unique `Face Number` in editor. This unique number would ideally be in sequence starting from 0, 1, and so on.
+
+The rest of the controls are same usual. Further this will also work with your face mesh scene as well if it's present as a child of the tracker object.
 
 
 ## Advanced Usage

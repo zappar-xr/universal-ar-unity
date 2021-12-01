@@ -56,6 +56,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -80,6 +81,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &3506937517071323421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92,10 +94,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582e641d5244241d1b4dd1498c523505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faceMaterial: {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
   useDefaultFullHead: 1
   fillEyeLeft: 0
   fillEyeRight: 0
   fillMouth: 0
   fillNeck: 0
-  faceTracker: {fileID: 0}
+  m_haveInitialisedFaceMesh: 0
+  FaceMaterial: {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
+  FaceTrackingTarget: {fileID: 0}

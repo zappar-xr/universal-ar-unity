@@ -7,32 +7,31 @@ namespace Zappar
     [RequireComponent(typeof(Camera))]
     public class ZapparCameraBackground : MonoBehaviour
     {
-        private Material m_CameraMaterial=null;
+        private Material m_cameraMaterial=null;
 
-        private bool m_Initialised = false;
-        private Texture2D m_CamTexture = null;
-        private Matrix4x4 textureMatrix;
-        private float[] textureMatElements = null;
-        private Camera backgroundCamera = null;
-        private ZapparCamera mainCamera = null;
-
+        private bool m_initialised = false;
+        private Texture2D m_camTexture = null;
+        private Matrix4x4 m_textureMatrix;
+        private float[] m_textureMatElements = null;
+        private Camera m_backgroundCamera = null;
+        private ZapparCamera m_zapparCamera = null;
         private float[] m_camerModel = null;
 
-        public Texture2D GetCameraTexture => m_CamTexture;
-        public Matrix4x4 GetTextureMatrix => textureMatrix;
+        public Texture2D GetCameraTexture => m_camTexture;
+        public Matrix4x4 GetTextureMatrix => m_textureMatrix;
 
         private void Awake()
         {
-            m_CameraMaterial = new Material(Shader.Find("Zappar/CameraBackgroundShader"));
-            if(m_CameraMaterial==null)
+            m_cameraMaterial = new Material(Shader.Find("Zappar/CameraBackgroundShader"));
+            if(m_cameraMaterial==null)
             {
                 Debug.LogError("Can't render camera texture: Missing Zappar/CameraBackgroundShader!");
             }
-            m_CameraMaterial.mainTexture = Texture2D.blackTexture;
-            textureMatrix = new Matrix4x4();
-            textureMatElements = new float[16];
-            backgroundCamera = GetComponent<Camera>();
-            mainCamera = GetComponentInParent<ZapparCamera>();
+            m_cameraMaterial.mainTexture = Texture2D.blackTexture;
+            m_textureMatrix = new Matrix4x4();
+            m_textureMatElements = new float[16];
+            m_backgroundCamera = GetComponent<Camera>();
+            m_zapparCamera = GetComponentInParent<ZapparCamera>();
             m_camerModel = new float[] { 0, 0, 0, 0, 0, 0 };
         }
 
@@ -52,7 +51,7 @@ namespace Zappar
         {
             if (arg2.depth != -1)
                 return;
-            m_CameraMaterial.SetPass(0);
+            m_cameraMaterial.SetPass(0);
             GL.PushMatrix();
             GL.LoadIdentity();
             GL.LoadProjectionMatrix(Matrix4x4.Ortho(0, 1, 0, 1, 0, 1));
@@ -67,7 +66,7 @@ namespace Zappar
 #else
         void OnPostRender()
         {
-            m_CameraMaterial.SetPass(0);
+            m_cameraMaterial.SetPass(0);
             GL.PushMatrix();
             GL.LoadIdentity();
             GL.LoadProjectionMatrix(Matrix4x4.Ortho(0, 1, 0, 1, 0, 1));
@@ -83,54 +82,54 @@ namespace Zappar
 #endif
         void Update()
         {
-            if (m_CameraMaterial == null || mainCamera == null)
+            if (m_cameraMaterial == null || m_zapparCamera == null)
                 return;
 
-            if (!m_Initialised)
+            if (!m_initialised)
             {
-                m_Initialised = Z.HasInitialized() && mainCamera.CameraHasStarted;
+                m_initialised = Z.HasInitialized() && m_zapparCamera.CameraHasStarted;
                 return;
             }
 
-            if (mainCamera.CameraSourcePaused) return;
+            if (m_zapparCamera.CameraSourcePaused) return;
 
-            backgroundCamera.projectionMatrix = Z.PipelineProjectionMatrix(ZapparCamera.Instance.GetPipeline, Screen.width, Screen.height, backgroundCamera.nearClipPlane, backgroundCamera.farClipPlane, ref m_camerModel);
+            m_backgroundCamera.projectionMatrix = Z.PipelineProjectionMatrix(ZapparCamera.Instance.GetPipeline, Screen.width, Screen.height, m_backgroundCamera.nearClipPlane, m_backgroundCamera.farClipPlane, ref m_camerModel);
 
-            Z.PipelineCameraFrameTextureMatrix(ZapparCamera.Instance.GetPipeline, ref textureMatElements, Screen.width, Screen.height, ZapparCamera.Instance.IsMirrored);
+            Z.PipelineCameraFrameTextureMatrix(ZapparCamera.Instance.GetPipeline, ref m_textureMatElements, Screen.width, Screen.height, ZapparCamera.Instance.IsMirrored);
 
             UpdateTextureMatrix();
 
-            m_CameraMaterial.SetMatrix("_nativeTextureMatrix", textureMatrix);
+            m_cameraMaterial.SetMatrix("_nativeTextureMatrix", m_textureMatrix);
 
-            m_CamTexture = Z.PipelineCameraFrameTexture(ZapparCamera.Instance.GetPipeline);
-            if (m_CamTexture != null)
-                m_CameraMaterial.mainTexture = m_CamTexture;
+            m_camTexture = Z.PipelineCameraFrameTexture(ZapparCamera.Instance.GetPipeline);
+            if (m_camTexture != null)
+                m_cameraMaterial.mainTexture = m_camTexture;
 
         }
 
         private void UpdateTextureMatrix()
         {
-            textureMatrix[0, 0] = textureMatElements[0];
-            textureMatrix[1, 0] = textureMatElements[1];
-            textureMatrix[2, 0] = textureMatElements[2];
-            textureMatrix[3, 0] = textureMatElements[3];
-            textureMatrix[0, 1] = textureMatElements[4];
-            textureMatrix[1, 1] = textureMatElements[5];
-            textureMatrix[2, 1] = textureMatElements[6];
-            textureMatrix[3, 1] = textureMatElements[7];
-            textureMatrix[0, 2] = textureMatElements[8];
-            textureMatrix[1, 2] = textureMatElements[9];
-            textureMatrix[2, 2] = textureMatElements[10];
-            textureMatrix[3, 2] = textureMatElements[11];
-            textureMatrix[0, 3] = textureMatElements[12];
-            textureMatrix[1, 3] = textureMatElements[13];
-            textureMatrix[2, 3] = textureMatElements[14];
-            textureMatrix[3, 3] = textureMatElements[15];
+            m_textureMatrix[0, 0] = m_textureMatElements[0];
+            m_textureMatrix[1, 0] = m_textureMatElements[1];
+            m_textureMatrix[2, 0] = m_textureMatElements[2];
+            m_textureMatrix[3, 0] = m_textureMatElements[3];
+            m_textureMatrix[0, 1] = m_textureMatElements[4];
+            m_textureMatrix[1, 1] = m_textureMatElements[5];
+            m_textureMatrix[2, 1] = m_textureMatElements[6];
+            m_textureMatrix[3, 1] = m_textureMatElements[7];
+            m_textureMatrix[0, 2] = m_textureMatElements[8];
+            m_textureMatrix[1, 2] = m_textureMatElements[9];
+            m_textureMatrix[2, 2] = m_textureMatElements[10];
+            m_textureMatrix[3, 2] = m_textureMatElements[11];
+            m_textureMatrix[0, 3] = m_textureMatElements[12];
+            m_textureMatrix[1, 3] = m_textureMatElements[13];
+            m_textureMatrix[2, 3] = m_textureMatElements[14];
+            m_textureMatrix[3, 3] = m_textureMatElements[15];
         }
 
         private void OnDestroy()
         {
-            textureMatElements = null;            
+            m_textureMatElements = null;            
 #if ZAPPAR_SRP
             RenderPipelineManager.endCameraRendering -= RenderPipelineManager_endCameraRendering;
 #endif

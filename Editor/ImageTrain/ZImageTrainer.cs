@@ -12,19 +12,25 @@ namespace Zappar.Editor
     [Serializable]
     public class ZImageTrainerParams
     {
-        public string imgPath = "";
-        public int maxWidth = 512;
-        public int maxHeight = 512;
-        public bool allowOverwrite = false;
-        public bool encodePreviewImage = true;
+        public string ImagePath = "";
+        public int MaxWidth = 512;
+        public int MaxHeight = 512;
+        public bool AllowOverwrite = false;
+        public bool EncodePreviewImage = true;
     }
 
     public class ZImageTrainer : EditorWindow
     {
-        public static ZImageTrainerParams myParams = null;
-        private static bool showAdvanced = false;
-        private string zptPath;
-        private bool trainingInProgress = false;
+        [SerializeField]
+        private static ZImageTrainerParams s_myParams = null;
+        private static bool s_showAdvanced = false;
+        private static string s_zptPath;
+        private bool m_trainingInProgress = false;
+
+        private void OnEnable()
+        {
+            s_zptPath = Application.streamingAssetsPath;
+        }
 
         [MenuItem("Zappar/Editor/Open Image Trainer", false, 1)]
         private static void InitializeTrainerWindows()
@@ -32,9 +38,9 @@ namespace Zappar.Editor
             ZImageTrainer window = (ZImageTrainer)EditorWindow.GetWindow(typeof(ZImageTrainer));
             window.titleContent = new GUIContent() { text = "Zappar Image Trainer" };
 
-            if (myParams == null)
+            if (s_myParams == null)
             {
-                myParams = new ZImageTrainerParams();
+                s_myParams = new ZImageTrainerParams();
             }
 
             window.Show();
@@ -42,70 +48,78 @@ namespace Zappar.Editor
 
         private void OnGUI()
         {
-            if (myParams == null) myParams = new ZImageTrainerParams();
+            if (s_myParams == null) s_myParams = new ZImageTrainerParams();
 
             GUILayout.Label("Image Trainer Settings", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
             EditorGUILayout.BeginHorizontal();
-            myParams.imgPath = EditorGUILayout.TextField("Source image path", myParams.imgPath);
+            s_myParams.ImagePath = EditorGUILayout.TextField("Source image path", s_myParams.ImagePath);
             if (GUILayout.Button("...", GUILayout.Width(20)))
             {
                 EditorGUI.FocusTextInControl("");
-                string dir = myParams.imgPath.Length > 0 ? Path.GetDirectoryName(myParams.imgPath) : Application.dataPath;
+                string dir = s_myParams.ImagePath.Length > 0 ? Path.GetDirectoryName(s_myParams.ImagePath) : Application.dataPath;
                 string path = EditorUtility.OpenFilePanel("Select an image", dir, "png,jpg,jpeg");
                 if (path.Length > 0)
                 {
-                    myParams.imgPath = path;
+                    s_myParams.ImagePath = path;
                 }
             }
             EditorGUILayout.EndHorizontal();
 
-            myParams.allowOverwrite = EditorGUILayout.Toggle("Allow ZPT overwrite", myParams.allowOverwrite);
-            myParams.encodePreviewImage = EditorGUILayout.Toggle("Add image preview", myParams.encodePreviewImage);
+            s_myParams.AllowOverwrite = EditorGUILayout.Toggle("Allow ZPT overwrite", s_myParams.AllowOverwrite);
+            s_myParams.EncodePreviewImage = EditorGUILayout.Toggle("Add image preview", s_myParams.EncodePreviewImage);
 
-            if (showAdvanced)
+            if (s_showAdvanced)
             {
                 EditorGUILayout.Space(15);
                 GUILayout.Label("Image train parameters", EditorStyles.label);
                 EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins);
-                myParams.maxWidth = EditorGUILayout.IntField("Max Width", myParams.maxWidth);
-                myParams.maxHeight = EditorGUILayout.IntField("Max Height", myParams.maxHeight);
+                s_myParams.MaxWidth = EditorGUILayout.IntField("Max Width", s_myParams.MaxWidth);
+                s_myParams.MaxHeight = EditorGUILayout.IntField("Max Height", s_myParams.MaxHeight);
                 EditorGUILayout.EndVertical();
             }
 
             EditorGUILayout.Space(15);
 
-            if (GUILayout.Button((showAdvanced ? "Hide" : "Show") + " advanced settings"))
+            if (GUILayout.Button((s_showAdvanced ? "Hide" : "Show") + " advanced settings"))
             {
-                showAdvanced = !showAdvanced;
+                s_showAdvanced = !s_showAdvanced;
             }
 
-            EditorGUI.BeginDisabledGroup(trainingInProgress);
+            EditorGUI.BeginDisabledGroup(m_trainingInProgress);
             if (GUILayout.Button("Start"))
             {
-                trainingInProgress = true;
-                EditorCoroutineUtility.StartCoroutine(StartTraining(), this);
+                m_trainingInProgress = true;
+                string zptFile = GetZptFileFullPath();
+                if (FileWriteCheck(zptFile))
+                {
+                    EditorCoroutineUtility.StartCoroutine(StartTraining(), this);
+                }
+                else
+                {
+                    Debug.LogError("File already exists! Please enable overwrite option if you wish to replace the older version.\n" + zptFile);
+                    EditorUtility.DisplayDialog("Zappar Notification", "File already exists! Please enable overwrite option if you wish to replace the older version.\n" + zptFile, "OK");
+                    m_trainingInProgress = false;
+                }
             }
             EditorGUI.EndDisabledGroup();
         }
 
         IEnumerator StartTraining()
         {
-            if (string.IsNullOrEmpty(myParams.imgPath) || !File.Exists(myParams.imgPath))
+            if (string.IsNullOrEmpty(s_myParams.ImagePath) || !File.Exists(s_myParams.ImagePath))
             {
-                trainingInProgress = false;
-                Debug.LogError("Invalid image path: " + myParams.imgPath);
-                EditorUtility.DisplayDialog("Zappar Notification", "Invalid image path\n" + myParams.imgPath, "OK");
+                m_trainingInProgress = false;
+                Debug.LogError("Invalid image path: " + s_myParams.ImagePath);
+                EditorUtility.DisplayDialog("Zappar Notification", "Invalid image path\n" + s_myParams.ImagePath, "OK");
                 yield break;
             }
 
             Debug.Log("Starting image train process");
 
-            zptPath = Application.streamingAssetsPath;
-
             yield return new WaitForEndOfFrame();
-            byte[] data = File.ReadAllBytes(myParams.imgPath);
+            byte[] data = File.ReadAllBytes(s_myParams.ImagePath);
             Z.FileData src = new Z.FileData();
             Z.FileData zpt = new Z.FileData();
             Z.FileData preview = new Z.FileData();
@@ -117,13 +131,13 @@ namespace Zappar.Editor
 
             yield return new WaitForEndOfFrame();
 
-            if (myParams.encodePreviewImage)
+            if (s_myParams.EncodePreviewImage)
             {
                 preview.data = src.data;
                 preview.length = src.length;
             }
 
-            if (Z.TrainImageCompressedWithMax(ref src, ref zpt, ref preview, FileIsJpg(myParams.imgPath) ? 1 : 0, myParams.maxWidth, myParams.maxHeight) == 1)
+            if (Z.TrainImageCompressedWithMax(ref src, ref zpt, ref preview, FileIsJpg(s_myParams.ImagePath) ? 1 : 0, s_myParams.MaxWidth, s_myParams.MaxHeight) == 1)
             {
                 //Debug.Log("Success in training image");
 
@@ -133,19 +147,12 @@ namespace Zappar.Editor
                 {
                     byte[] zdata = new byte[zpt.length];
                     Marshal.Copy(zpt.data, zdata, 0, zpt.length);
-                    string filename = Path.GetFileNameWithoutExtension(myParams.imgPath) + ".zpt";
-                    string zptFile = Path.Combine(zptPath, filename);
-                    if (myParams.allowOverwrite || !File.Exists(zptFile))
-                    {
-                        File.WriteAllBytes(zptFile, zdata);
-                        Debug.Log("zpt saved at: " + zptFile);
-                        EditorUtility.DisplayDialog("Zappar Notification", "Finished training.\n ZPT saved at: " + zptFile, "OK");
-                    }
-                    else
-                    {
-                        Debug.LogError("File already exists! Please enable overwrite option if you wish to replace the older version.\n" + zptFile);
-                        EditorUtility.DisplayDialog("Zappar Notification", "File already exists! Please enable overwrite option if you wish to replace the older version.\n" + zptFile, "OK");
-                    }
+
+                    string zptFile = GetZptFileFullPath();
+                    File.WriteAllBytes(zptFile, zdata);
+
+                    Debug.Log("zpt saved at: " + zptFile);
+                    EditorUtility.DisplayDialog("Zappar Notification", "Finished training.\n ZPT saved at: " + zptFile, "OK");
                 }
                 else
                 {
@@ -167,8 +174,20 @@ namespace Zappar.Editor
 
             Marshal.FreeHGlobal(src.data);
 
-            trainingInProgress = false;
+            m_trainingInProgress = false;
             Debug.Log("Finished image train process");
+        }
+
+        private static bool FileWriteCheck(string filePath)
+        {
+            return s_myParams.AllowOverwrite || !File.Exists(filePath);
+        }
+
+        private static string GetZptFileFullPath()
+        {
+            string filename = Path.GetFileNameWithoutExtension(s_myParams.ImagePath) + ".zpt";
+            string zptFile = Path.Combine(s_zptPath, filename);
+            return zptFile;
         }
 
         private static bool FileIsJpg(string path)

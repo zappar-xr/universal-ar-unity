@@ -5,19 +5,24 @@ namespace Zappar
 {
     public class ZapparInstantTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
     {
-        public IntPtr m_instantTracker = IntPtr.Zero;
-        private bool m_userHasPlaced = false;
+        public IntPtr? InstantTracker = null;
+        [SerializeField, Tooltip("Offset the tracker in camera view when user hasn't placed the anchor")]
+        private Vector3 m_anchorOffsetFromCamera = new Vector3(0, 0, -5);
+        [SerializeField,Tooltip("Wait for touch event to place anchor for tracking")]
+        private bool m_placeOnTouch = true;
         private bool m_hasInitialised = false;
         private bool m_isMirrored = false;
+        public bool UserHasPlaced { get; private set; }
 
         void Start()
         {
-            ZapparCamera.Instance.RegisterCameraListener(this);
+            if (ZapparCamera.Instance != null)
+                ZapparCamera.Instance.RegisterCameraListener(this, true);
         }
 
         public void OnZapparInitialised(IntPtr pipeline)
         {
-            m_instantTracker = Z.InstantWorldTrackerCreate(pipeline);
+            InstantTracker = Z.InstantWorldTrackerCreate(pipeline);
             m_hasInitialised = true;
         }
 
@@ -28,8 +33,8 @@ namespace Zappar
 
         void UpdateTargetPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetPose();
-            Matrix4x4 instantTrackerPose = Z.InstantWorldTrackerAnchorPose(m_instantTracker, cameraPose, m_isMirrored);
+            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 instantTrackerPose = Z.InstantWorldTrackerAnchorPose(InstantTracker.Value, cameraPose, m_isMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(instantTrackerPose);
 
             transform.localPosition = Z.GetPosition(targetPose);
@@ -39,19 +44,19 @@ namespace Zappar
 
         void Update()
         {
-            if (!m_hasInitialised)
+            if (!m_hasInitialised || InstantTracker==null)
             {
                 return;
             }
 
-            if (!m_userHasPlaced)
+            if (!UserHasPlaced)
             {
-                Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(m_instantTracker, 0, 0, -5, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(InstantTracker.Value, m_anchorOffsetFromCamera.x, m_anchorOffsetFromCamera.y, m_anchorOffsetFromCamera.z, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
             }
-
-            if (Input.touchCount > 0)
+            
+            if (m_placeOnTouch && Input.touchCount > 0)
             {
-                m_userHasPlaced = true;
+                UserHasPlaced = true;
             }
 
             UpdateTargetPose();
@@ -61,13 +66,29 @@ namespace Zappar
         {
             if (m_hasInitialised)
             {
-                if (m_instantTracker != IntPtr.Zero) Z.InstantWorldTrackerDestroy(m_instantTracker);
+                if (InstantTracker != null)
+                {
+                    Z.InstantWorldTrackerDestroy(InstantTracker.Value);
+                    InstantTracker = null;
+                }
             }
+            if (ZapparCamera.Instance != null)
+                ZapparCamera.Instance.RegisterCameraListener(this, false);
         }
 
         public override Matrix4x4 AnchorPoseCameraRelative()
         {
-            return Z.InstantWorldTrackerAnchorPoseCameraRelative(m_instantTracker, m_isMirrored);
+            return Z.InstantWorldTrackerAnchorPoseCameraRelative(InstantTracker.Value, m_isMirrored);
+        }
+    
+        public void PlaceTrackerAnchor()
+        {
+            UserHasPlaced = true;
+        }
+
+        public void ResetTrackerAnchor()
+        {
+            UserHasPlaced = false;
         }
     }
 }

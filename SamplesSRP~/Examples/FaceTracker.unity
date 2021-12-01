@@ -43,7 +43,7 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 0
+  m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -118,6 +118,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
@@ -166,13 +168,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582e641d5244241d1b4dd1498c523505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useDefaultFullHead: 1
-  fillEyeLeft: 0
-  fillEyeRight: 0
-  fillMouth: 0
-  fillNeck: 0
-  faceTracker: {fileID: 1090417569}
-  faceMaterial: {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
+  UseDefaultFullHead: 1
+  FillEyeLeft: 0
+  FillEyeRight: 0
+  FillMouth: 0
+  FillNeck: 0
+  FaceMaterial: {fileID: 2100000, guid: a4d5d344c057d8342a4615de9f81e32a, type: 2}
+  FaceTrackingTarget: {fileID: 1090417569}
 --- !u!23 &107563088
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -188,10 +190,11 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e26aaf9b92a214ddeadf1af0c4f8eeff, type: 2}
+  - {fileID: 2100000, guid: a4d5d344c057d8342a4615de9f81e32a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -212,6 +215,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &107563089
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -253,10 +257,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorOrigin: {fileID: 1090417569}
-  useFrontFacingCamera: 1
-  cameraAttitudeFromGyro: 0
-  mirrorRearCameras: 0
-  mirrorUserCameras: 1
+  UseFrontFacingCamera: 1
+  CameraAttitudeFromGyro: 0
+  MirrorRearCameras: 0
+  MirrorUserCameras: 1
   EditorCamera: FaceTime HD Camera (Built-in)
 --- !u!81 &598791885
 AudioListener:
@@ -352,6 +356,7 @@ MonoBehaviour:
   m_StopNaN: 0
   m_Dithering: 0
   m_ClearDepth: 1
+  m_AllowXRRendering: 1
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
   m_Version: 2
@@ -400,7 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d3deb3198921491185ad99484b1fea5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: 6827186fe9299cd45924aa38dd869544, type: 2}
+  HeadMaterial: {fileID: 2100000, guid: 6827186fe9299cd45924aa38dd869544, type: 2}
 --- !u!23 &915921160
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -416,6 +421,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -440,6 +446,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &915921161
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -447,7 +454,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 915921157}
-  m_Mesh: {fileID: 1259034919}
+  m_Mesh: {fileID: 1901009656}
 --- !u!1 &1090417568
 GameObject:
   m_ObjectHideFlags: 0
@@ -477,12 +484,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80cec4a253660466fae4c7b898cdaaa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_OnSeenEvent:
+  OnSeenEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_OnNotSeenEvent:
+  OnNotSeenEvent:
     m_PersistentCalls:
       m_Calls: []
+  m_faceNumber: 0
 --- !u!4 &1090417570
 Transform:
   m_ObjectHideFlags: 0
@@ -576,6 +584,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1208020443
@@ -592,7 +601,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!43 &1259034919
+--- !u!43 &1901009656
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -752,6 +761,7 @@ Mesh:
   m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
+    serializedVersion: 2
     offset: 0
     size: 0
     path: 
@@ -872,6 +882,7 @@ MonoBehaviour:
   m_StopNaN: 0
   m_Dithering: 0
   m_ClearDepth: 1
+  m_AllowXRRendering: 1
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
   m_Version: 2
@@ -922,6 +933,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -946,6 +958,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &2068417217
 MeshFilter:
   m_ObjectHideFlags: 0

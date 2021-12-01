@@ -67,13 +67,13 @@ public class Z
         VERBOSE = 3
     }
 
-#if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
-    public enum DebugMode
-    {
+    public enum DebugMode : uint {
         None = 0,
         File = 1,
         UnityLog = 2
     }
+
+#if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void DebugLogDelegate(string str);
@@ -137,6 +137,8 @@ public class Z
 // BEGIN AUTOGEN
 
         [DllImport(Config.PluginName)]
+    private static extern int zappar_loaded();
+    [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_camera_default_device_id(int userFacing);
     [DllImport(Config.PluginName)]
     private static extern int zappar_camera_count();
@@ -520,8 +522,9 @@ public class Z
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         return zappar_is_visible_webgl();
-#endif
+#else
         return true;
+#endif
     }
 
     public static Matrix4x4 PipelineProjectionMatrix(IntPtr o, int renderWidth, int renderHeight, float zNear, float zFar, ref float[] cameraModel) {
@@ -721,7 +724,12 @@ public class Z
 
     // BEGIN AUTOGEN
 
-    public static string CameraDefaultDeviceId(bool userFacing) {
+    public static bool Loaded() {
+        
+        int ret = zappar_loaded();
+        return (ret == 1) ? true : false;
+    }
+	public static string CameraDefaultDeviceId(bool userFacing) {
         
         IntPtr ret = zappar_camera_default_device_id(userFacing ? 1 : 0);
         return Marshal.PtrToStringAnsi(ret);
