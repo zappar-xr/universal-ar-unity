@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Zappar.Editor
+namespace Zappar.Obsolete.Editor
 {
     [CustomEditor(typeof(ZapparFaceTrackingTarget))]
     [DisallowMultipleComponent]

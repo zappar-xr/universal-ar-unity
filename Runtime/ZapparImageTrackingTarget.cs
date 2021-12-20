@@ -4,7 +4,7 @@ using UnityEngine.Events;
 
 namespace Zappar
 {
-    public class ZapparImageTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
+    public class ZapparImageTrackingTarget : ZapparTrackingTarget, ICameraListener
     {
         public enum PlaneOrientation
         {
@@ -14,8 +14,9 @@ namespace Zappar
 
         public IntPtr? ImageTrackerPtr { get; private set; } = null;
 
-        private bool m_hasInitialised = false;
-        private bool m_isMirrored;
+        private bool m_hasInitialized = false;
+        private bool m_isMirrored = false;
+        private bool m_isPaused = false;
 
         [SerializeField, HideInInspector]
         public string Target;
@@ -31,25 +32,34 @@ namespace Zappar
         private bool m_isVisible = false;
         private const int TrackIndx = 0;
 
-        void Start()
+        private void Start()
         {
             if (ZapparCamera.Instance != null)
                 ZapparCamera.Instance.RegisterCameraListener(this, true);
+
+            if (ZapparCamera.Instance.CameraSourceInitialized && !m_hasInitialized)
+            {
+                OnMirroringUpdate(ZapparCamera.Instance.MirrorCamera);
+                OnZapparCameraPaused(ZapparCamera.Instance.CameraSourcePaused);
+                OnZapparInitialized(ZapparCamera.Instance.GetPipeline);
+            }
         }
 
-        public void OnZapparInitialised(IntPtr pipeline)
+        public void OnZapparInitialized(IntPtr pipeline)
         {
             if (!gameObject.activeInHierarchy)
             {
                 Debug.Log("Could not start LoadZPTTarget Coroutine as gameobject is inactive.");
                 return;
             }
-            m_hasInitialised = true;
+            m_hasInitialized = true;
             ImageTrackerPtr = Z.ImageTrackerCreate(pipeline);
 
             string filename = Target;
             StartCoroutine(Z.LoadZPTTarget(filename, TargetDataAvailableCallback));
         }
+
+        public void OnZapparCameraPaused(bool pause) { m_isPaused = pause; }
 
         public void OnMirroringUpdate(bool mirrored)
         {
@@ -70,9 +80,9 @@ namespace Zappar
             transform.localScale = Z.GetScale(targetPose);
         }
 
-        void Update()
+        private void Update()
         {
-            if (!m_hasInitialised || ImageTrackerPtr == null)
+            if (!m_hasInitialized || ImageTrackerPtr == null || m_isPaused)
             {
                 return;
             }
@@ -101,9 +111,9 @@ namespace Zappar
             Z.ImageTrackerTargetLoadFromMemory(ImageTrackerPtr.Value, data);
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
-            if (m_hasInitialised)
+            if (m_hasInitialized)
             {
                 if (ImageTrackerPtr != null)
                 {

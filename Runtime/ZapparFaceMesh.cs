@@ -15,45 +15,46 @@ namespace Zappar
         public bool FillMouth;
         public bool FillNeck;
 
-        private ZapparFaceTrackingTarget m_faceTracker;
+        private ZapparFaceTrackingAnchor m_faceTracker;
 
         public Mesh UnityMesh { get; protected set; } = null;
-        public bool HaveInitialisedFaceMesh { get; protected set; } = false;
-
-        private bool m_isMirrored;
-
-        private IntPtr m_faceTrackingTargetPipeline;
-        private int m_faceTrackingTargetId;
+        public bool HaveInitializedFaceMesh { get; protected set; } = false;
 
         private float[] m_faceVertices = null;
         private float[] m_faceNormals = null;
 
+        private bool m_isMirrored = false;
+
         public abstract void UpdateMaterial();
         
-        public abstract ZapparFaceTrackingTarget GetFaceTrackingTarget();
+        public abstract ZapparFaceTrackingAnchor GetFaceTrackingAnchor();
 
         public void InitFaceMeshOnStart()
         {
-            m_faceTracker = GetFaceTrackingTarget();
+            m_faceTracker = GetFaceTrackingAnchor();
             if (m_faceTracker == null) 
             { 
-                Debug.LogError("No face tracking target reference found!");
+                Debug.LogError("Missing face tracking anchor reference!");
+                gameObject.SetActive(false);
                 return; 
             }
 
-            ZapparFaceTrackingManager.RegisterPipelineCallback(OnFaceTrackerPipelineInitialised);
+            m_faceTracker.RegisterPipelineInitCallback(OnFaceTrackerPipelineInitialised, true);
 
             CreateMesh(true);
+        
+            if ( m_faceTracker.FaceTrackingTarget == null) return;
+
+            if (m_faceTracker.FaceTrackingTarget.HasInitialized && !m_hasInitialised)
+                OnFaceTrackerPipelineInitialised(m_faceTracker.FaceTrackingTarget.FaceTrackerPipeline.Value, m_faceTracker.FaceTrackingTarget.IsMirrored);
         }
 
         private void OnFaceTrackerPipelineInitialised(IntPtr pipeline, bool mirrored)
         {
-            m_faceTrackingTargetPipeline = pipeline;
-            m_faceTrackingTargetId = m_faceTracker.FaceTrackingId;
             m_isMirrored = mirrored;
 
             m_hasInitialised = true;
-            HaveInitialisedFaceMesh = false;
+            HaveInitializedFaceMesh = false;
 
             CreateMesh();
         }
@@ -64,7 +65,7 @@ namespace Zappar
                 return;
 
             if (m_faceTracker == null)
-                m_faceTracker = GetFaceTrackingTarget();
+                m_faceTracker = GetFaceTrackingAnchor();
 
             if (FaceMeshPtr == null)
             {
@@ -131,25 +132,25 @@ namespace Zappar
             UnityMesh.vertices = Z.UpdateFaceMeshVerticesForUnity(m_faceVertices);
             UnityMesh.normals = Z.UpdateFaceMeshNormalsForUnity(m_faceNormals);
 
-            if (!HaveInitialisedFaceMesh)
+            if (!HaveInitializedFaceMesh)
             {
                 UnityMesh.triangles = Z.UpdateFaceMeshTrianglesForUnity(Z.FaceMeshIndices(FaceMeshPtr.Value));
                 UnityMesh.uv = Z.UpdateFaceMeshUVsForUnity(Z.FaceMeshUvs(FaceMeshPtr.Value));
-                HaveInitialisedFaceMesh = true;
+                HaveInitializedFaceMesh = true;
             }
         }
 
-        void Update()
+        private void Update()
         {
-            if (!m_hasInitialised || Z.FaceTrackerAnchorCount(m_faceTrackingTargetPipeline) <= m_faceTrackingTargetId)
+            if (!m_hasInitialised || !m_faceTracker.FaceIsVisible)
                 return;
 
             UpdateMeshData();
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
-            ZapparFaceTrackingManager.DeRegisterPipelineCallback(OnFaceTrackerPipelineInitialised);
+            m_faceTracker.RegisterPipelineInitCallback(OnFaceTrackerPipelineInitialised, false);
             if (FaceMeshPtr != null && Application.isPlaying)
                 Z.FaceMeshDestroy(FaceMeshPtr.Value);
 
@@ -170,7 +171,7 @@ namespace Zappar
             UnityMesh = null;
             m_faceVertices = null;
             m_faceNormals = null;
-            HaveInitialisedFaceMesh = false;
+            HaveInitializedFaceMesh = false;
         }
     }
 }

@@ -3,44 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>files</key>
-	<dict>
-		<key>Resources/face_mesh_face_model.zbin</key>
-		<data>
-		OWmW0m8ZrQvKH+ompdPCesfJJlc=
-		</data>
-		<key>Resources/face_mesh_full_head_simplified_model.zbin</key>
-		<data>
-		u/nEgpHBYlFd9nlbHUvluy316vU=
-		</data>
-		<key>Resources/face_tracking_model.zbin</key>
-		<data>
-		XjdZpNDXA4Eks1mVXNqsgvjOu/w=
-		</data>
-	</dict>
+	<dict/>
 	<key>files2</key>
-	<dict>
-		<key>Resources/face_mesh_face_model.zbin</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			A7xj2SqTF+sXtSPKJ8HwogTahDGITT++Tc0/1Av35TQ=
-			</data>
-		</dict>
-		<key>Resources/face_mesh_full_head_simplified_model.zbin</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			5SN0v9OI8BzX4rw1tL51elRX4h/iy3SnUEt3d9DKs3w=
-			</data>
-		</dict>
-		<key>Resources/face_tracking_model.zbin</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			VlhV0zdJiSU7UsX1w0Z5kNyribvalABTWKQ8UgtjwSM=
-			</data>
-		</dict>
-	</dict>
+	<dict/>
 	<key>rules</key>
 	<dict>
 		<key>^Resources/</key>

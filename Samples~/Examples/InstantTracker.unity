@@ -154,11 +154,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37677d5322c344b439d86a6630bd7a6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anchorOrigin: {fileID: 299077110}
+  AnchorOrigin: {fileID: 299077110}
   UseFrontFacingCamera: 0
   CameraAttitudeFromGyro: 0
-  MirrorRearCameras: 0
-  MirrorUserCameras: 0
+  MirrorCamera: 0
   EditorCamera: FaceTime HD Camera (Built-in)
 --- !u!81 &20232906
 AudioListener:
@@ -348,6 +347,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a7c067e774884e3fb23c00a74bd6040, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_anchorOffsetFromCamera: {x: 0, y: 0, z: -3}
+  m_placeOnTouch: 1
+  MoveAnchorOnZ: 1
+  m_zCamera: {fileID: 20232905}
+  m_minZDistance: 3
+  m_maxZDistance: 40
 --- !u!4 &299077111
 Transform:
   m_ObjectHideFlags: 0
@@ -416,7 +421,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a39b49cbb54d78d469caa718896ee553, type: 2}
+  - {fileID: 2100000, guid: cbd70f60829534dccb2c61cddc91e3e5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

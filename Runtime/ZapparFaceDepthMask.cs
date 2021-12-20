@@ -4,19 +4,19 @@ using UnityEngine;
 namespace Zappar
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    internal class ZapparFaceDepthMask : ZapparFaceMesh
+    public class ZapparFaceDepthMask : ZapparFaceMesh
     {
         public Material FaceMaterial;
-        public ZapparFaceTrackingTarget FaceTrackingTarget;
+        public ZapparFaceTrackingAnchor FaceTrackingAnchor;
 
         private void Start()
         {
             InitFaceMeshOnStart();
         }
 
-        public override ZapparFaceTrackingTarget GetFaceTrackingTarget()
+        public override ZapparFaceTrackingAnchor GetFaceTrackingAnchor()
         {
-            return (FaceTrackingTarget == null) ? GetComponentInParent<ZapparFaceTrackingTarget>() : FaceTrackingTarget;
+            return (FaceTrackingAnchor == null) ? GetComponentInParent<ZapparFaceTrackingAnchor>() : FaceTrackingAnchor;
         }
 
         public override void UpdateMaterial()

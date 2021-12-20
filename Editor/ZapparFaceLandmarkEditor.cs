@@ -29,7 +29,12 @@ namespace Zappar.Editor
         {
             if (Application.isPlaying) return;
 
-            m_target = (ZapparFaceLandmark)target;
+            m_target = (ZapparFaceLandmark)target; 
+            if (m_target.FaceTrackingAnchor == null)
+            {
+                Debug.Log("Assign Face tracking anchor for this face landmark");
+                return;
+            }
             m_landmarkName = m_target.LandmarkName;
         }
 
@@ -41,7 +46,7 @@ namespace Zappar.Editor
 
             m_target = (ZapparFaceLandmark)target;
 
-            if(m_target.LandmarkName != m_landmarkName)
+            if (m_target.FaceTrackingAnchor != null && m_target.LandmarkName != m_landmarkName)
             {
                 m_landmarkName = m_target.LandmarkName;
                 m_target.transform.localPosition = m_landmarkPositions[(int)m_landmarkName];

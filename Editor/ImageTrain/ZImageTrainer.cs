@@ -32,7 +32,7 @@ namespace Zappar.Editor
             s_zptPath = Application.streamingAssetsPath;
         }
 
-        [MenuItem("Zappar/Editor/Open Image Trainer", false, 1)]
+        [MenuItem("Zappar/Editor/Open Image Trainer", false, 14)]
         private static void InitializeTrainerWindows()
         {
             ZImageTrainer window = (ZImageTrainer)EditorWindow.GetWindow(typeof(ZImageTrainer));

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Zappar
+namespace Zappar.Obsolete
 {
     internal static class ZapparFaceTrackingManager
     {
@@ -48,7 +48,7 @@ namespace Zappar
         }
     }
 
-    public class ZapparFaceTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
+    public class ZapparFaceTrackingTarget : ZapparTrackingTarget, ICameraListener
     {
         public UnityEvent OnSeenEvent;
         public UnityEvent OnNotSeenEvent;
@@ -91,7 +91,7 @@ namespace Zappar
                 ZapparCamera.Instance.RegisterCameraListener(this, true);
         }
 
-        public void OnZapparInitialised(IntPtr pipeline)
+        public void OnZapparInitialized(IntPtr pipeline)
         {
             if (!ZapparFaceTrackingManager.HasInitialized)
             {
@@ -109,6 +109,8 @@ namespace Zappar
             }
             m_hasInitialised = true;
         }
+
+        public void OnZapparCameraPaused(bool pause) { }
 
         public void OnMirroringUpdate(bool mirrored)
         {

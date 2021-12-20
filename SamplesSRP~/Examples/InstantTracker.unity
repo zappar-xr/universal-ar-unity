@@ -155,11 +155,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37677d5322c344b439d86a6630bd7a6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anchorOrigin: {fileID: 299077110}
+  AnchorOrigin: {fileID: 299077110}
   UseFrontFacingCamera: 0
   CameraAttitudeFromGyro: 0
-  MirrorRearCameras: 0
-  MirrorUserCameras: 0
+  MirrorCamera: 0
   EditorCamera: FaceTime HD Camera (Built-in)
 --- !u!81 &20232906
 AudioListener:
@@ -249,6 +248,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 0
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
@@ -381,6 +381,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a7c067e774884e3fb23c00a74bd6040, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_anchorOffsetFromCamera: {x: 0, y: 0, z: -3}
+  m_placeOnTouch: 1
+  MoveAnchorOnZ: 1
+  m_zCamera: {fileID: 20232905}
+  m_minZDistance: 3
+  m_maxZDistance: 40
 --- !u!4 &299077111
 Transform:
   m_ObjectHideFlags: 0
@@ -615,6 +621,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 0
   m_Antialiasing: 0
   m_AntialiasingQuality: 2

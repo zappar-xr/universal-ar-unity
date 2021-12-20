@@ -47,7 +47,7 @@ namespace Zappar
                 filter.sharedMesh.normals = Z.UpdateFaceMeshNormalsForUnity(Z.FaceMeshNormals(m_faceMesh.Value));
                 filter.sharedMesh.triangles = Z.UpdateFaceMeshTrianglesForUnity(Z.FaceMeshIndices(m_faceMesh.Value));
                 filter.sharedMesh.uv = Z.UpdateFaceMeshUVsForUnity(Z.FaceMeshUvs(m_faceMesh.Value));
-
+                filter.sharedMesh.name = "ZHeadModel";
             }
 
             if (HeadMaterial != null)
