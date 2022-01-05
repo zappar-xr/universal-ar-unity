@@ -26,7 +26,7 @@ namespace Zappar
         {
             DontDestroyOnLoad(this);
 
-            var settings = Resources.FindObjectsOfTypeAll< ZapparUARSettings>();
+            var settings = Resources.FindObjectsOfTypeAll<ZapparUARSettings>();
             if (settings != null && settings.Length>0)
             {
                 DebugMode = settings[0].DebugMode;

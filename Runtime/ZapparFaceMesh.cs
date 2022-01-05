@@ -42,8 +42,8 @@ namespace Zappar
             m_faceTracker.RegisterPipelineInitCallback(OnFaceTrackerPipelineInitialised, true);
 
             CreateMesh(true);
-        
-            if ( m_faceTracker.FaceTrackingTarget == null) return;
+
+            if (m_faceTracker.FaceTrackingTarget == null) return;
 
             if (m_faceTracker.FaceTrackingTarget.HasInitialized && !m_hasInitialised)
                 OnFaceTrackerPipelineInitialised(m_faceTracker.FaceTrackingTarget.FaceTrackerPipeline.Value, m_faceTracker.FaceTrackingTarget.IsMirrored);
@@ -80,7 +80,7 @@ namespace Zappar
             DestroyUnityMesh();
             LoadMeshData();
 
-            UnityMesh = new Mesh();
+            UnityMesh = gameObject.GetComponent<MeshFilter>().sharedMesh ?? new Mesh();
             UnityMesh.name = "ZFaceMesh" + (UseDefaultFullHead ? "_Full" : "");
             gameObject.GetComponent<MeshFilter>().sharedMesh = UnityMesh;
 
@@ -116,7 +116,7 @@ namespace Zappar
 
         private void UpdateMeshData()
         {
-            if (UnityMesh == null || m_faceTracker==null)
+            if (UnityMesh == null || m_faceTracker == null)
                 return;
 
             Z.FaceMeshUpdate(FaceMeshPtr.Value, m_faceTracker.Identity, m_faceTracker.Expression, m_isMirrored);
@@ -126,6 +126,8 @@ namespace Zappar
                 m_faceVertices = new float[Z.FaceMeshVerticesSize(FaceMeshPtr.Value)];
                 m_faceNormals = new float[Z.FaceMeshNormalsSize(FaceMeshPtr.Value)];
             }
+
+            if (m_faceVertices.Length == 0) return;
 
             Z.UpdateFaceMeshVertices(FaceMeshPtr.Value, ref m_faceVertices);
             Z.UpdateFaceMeshNormals(FaceMeshPtr.Value, ref m_faceNormals);
