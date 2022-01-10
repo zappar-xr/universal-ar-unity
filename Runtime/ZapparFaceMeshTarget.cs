@@ -3,39 +3,28 @@ using UnityEngine;
 
 namespace Zappar
 {
-    [ExecuteInEditMode]
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    internal class ZapparFaceMeshTarget : ZapparFaceMesh
+    public class ZapparFaceMeshTarget : ZapparFaceMesh
     {
-        public Material faceMaterial;
+        [Tooltip("The face material this mesh should use.")]
+        public Material FaceMaterial;
+        [Tooltip("Face tracking anchor that this landmark should use. Also parent this object under the respective anchor for correct pose update.")]
+        public ZapparFaceTrackingAnchor FaceTrackingAnchor;
 
-        void Start()
+        private void Start()
         {
-            InitCoeffs();
-
-            if (ZapparCamera.Instance != null)
-                ZapparCamera.Instance.RegisterCameraListener(this);
-
-            if (!Application.isPlaying && m_faceMesh == IntPtr.Zero)
-            {
-                //Create new face model
-                m_faceMesh = Z.FaceMeshCreate();
-                CreateMesh();
-            }
+            InitFaceMeshOnStart();
         }
 
-        public void OnEnable()
+        public override ZapparFaceTrackingAnchor GetFaceTrackingAnchor()
         {
-            if (faceMaterial != null)
-                gameObject.GetComponent<MeshRenderer>().sharedMaterial = faceMaterial;
-            if (faceTracker == null)
-                faceTracker = GetComponentInParent<ZapparFaceTrackingTarget>();
+            return (FaceTrackingAnchor == null) ? GetComponentInParent<ZapparFaceTrackingAnchor>() : FaceTrackingAnchor;
         }
 
         public override void UpdateMaterial()
         {
-            if (faceMaterial != null)
-                gameObject.GetComponent<MeshRenderer>().sharedMaterial = faceMaterial;
+            if (FaceMaterial != null)
+                gameObject.GetComponent<MeshRenderer>().sharedMaterial = FaceMaterial;
         }
     }
 }

@@ -4,30 +4,25 @@ using UnityEngine;
 namespace Zappar
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    internal class ZapparFaceDepthMask : ZapparFaceMesh
+    public class ZapparFaceDepthMask : ZapparFaceMesh
     {
-        public Material faceMaterial;
+        public Material FaceMaterial;
+        public ZapparFaceTrackingAnchor FaceTrackingAnchor;
 
-        void Start()
+        private void Start()
         {
-            InitCoeffs();
-
-            if (ZapparCamera.Instance != null)
-                ZapparCamera.Instance.RegisterCameraListener(this);
+            InitFaceMeshOnStart();
         }
 
-        public void OnEnable()
+        public override ZapparFaceTrackingAnchor GetFaceTrackingAnchor()
         {
-            if (faceMaterial != null)
-                gameObject.GetComponent<MeshRenderer>().sharedMaterial = faceMaterial;
-            if (faceTracker == null)
-                faceTracker = GetComponentInParent<ZapparFaceTrackingTarget>();
+            return (FaceTrackingAnchor == null) ? GetComponentInParent<ZapparFaceTrackingAnchor>() : FaceTrackingAnchor;
         }
 
         public override void UpdateMaterial()
         {
-            if (faceMaterial != null)
-                gameObject.GetComponent<MeshRenderer>().sharedMaterial = faceMaterial;
+            if (FaceMaterial != null)
+                gameObject.GetComponent<MeshRenderer>().sharedMaterial = FaceMaterial;
         }
     }
 }

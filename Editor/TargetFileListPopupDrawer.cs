@@ -10,19 +10,19 @@ namespace Zappar.Editor
     [CustomPropertyDrawer(typeof(TargetFileListPopupAttribute))]
     public class TargetFileListPopupDrawer : PropertyDrawer
     {
-        private DateTime lastFileCheck = new DateTime();
-        List<string> zptFiles;
+        private DateTime m_lastFileCheck = new DateTime();
+        List<string> m_zptFiles = new List<string>();
 
         private void UpdateFiles()
         {
-            zptFiles = new List<string>();
+            m_zptFiles.Clear();
             try
             {
                 DirectoryInfo directory = new DirectoryInfo(Application.streamingAssetsPath);
                 FileInfo[] files = directory.GetFiles("*.zpt");
                 foreach (FileInfo file in files)
                 {
-                    zptFiles.Add(file.Name);
+                    m_zptFiles.Add(file.Name);
                 }
             }
             catch (Exception e)
@@ -30,23 +30,23 @@ namespace Zappar.Editor
                 // Unable to check streaming assets path
                 Debug.LogError("Unable to check streaming assets path: " + e.Message);
             }
-            lastFileCheck = DateTime.Now;
+            m_lastFileCheck = DateTime.Now;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            if (DateTime.Now.Second > (lastFileCheck.Second + 1))
+            if (DateTime.Now.Second > (m_lastFileCheck.Second + 1))
             {
                 UpdateFiles();
             }
 
             TargetFileListPopupAttribute atb = attribute as TargetFileListPopupAttribute;
 
-            if (zptFiles != null && zptFiles.Count > 0)
+            if (m_zptFiles != null && m_zptFiles.Count > 0)
             {
-                int index = Mathf.Max(zptFiles.IndexOf(property.stringValue), 0);
-                index = EditorGUI.Popup(position, property.name, index, zptFiles.ToArray());
-                property.stringValue = zptFiles[index];
+                int index = Mathf.Max(m_zptFiles.IndexOf(property.stringValue), 0);
+                index = EditorGUI.Popup(position, property.name, index, m_zptFiles.ToArray());
+                property.stringValue = m_zptFiles[index];
             }
             else
             {

@@ -4,180 +4,176 @@ using UnityEngine;
 
 namespace Zappar
 {
-    internal abstract class ZapparFaceMesh : MonoBehaviour, ZapparCamera.ICameraListener
+    public abstract class ZapparFaceMesh : MonoBehaviour
     {
-        protected IntPtr m_faceMesh = IntPtr.Zero;
+        public IntPtr? FaceMeshPtr { get; protected set; } = null;
         private bool m_hasInitialised = false;
 
-        public bool useDefaultFullHead = true;
-        public bool fillEyeLeft;
-        public bool fillEyeRight;
-        public bool fillMouth;
-        public bool fillNeck;
+        public bool UseDefaultFullHead = true;
+        public bool FillEyeLeft;
+        public bool FillEyeRight;
+        public bool FillMouth;
+        public bool FillNeck;
 
-        public ZapparFaceTrackingTarget faceTracker;
+        private ZapparFaceTrackingAnchor m_faceTracker;
 
-        protected Mesh m_mesh;
-        private bool m_haveInitialisedFaceMesh = false;
+        public Mesh UnityMesh { get; protected set; } = null;
+        public bool HaveInitializedFaceMesh { get; protected set; } = false;
 
-        private bool m_isMirrored;
-
-        private IntPtr m_faceTrackingTargetPtr;
-        private bool m_haveFaceTracker = false;
-
-        public const int m_numIdentityCoefficients = 50;
-        public const int m_numExpressionCoefficients = 29;
-
-        private float[] m_identity = null;
-        private float[] m_expression = null;
         private float[] m_faceVertices = null;
         private float[] m_faceNormals = null;
 
-        public void InitCoeffs()
+        private bool m_isMirrored = false;
+
+        public abstract void UpdateMaterial();
+        
+        public abstract ZapparFaceTrackingAnchor GetFaceTrackingAnchor();
+
+        public void InitFaceMeshOnStart()
         {
-            m_identity = new float[m_numIdentityCoefficients];
-            m_expression = new float[m_numExpressionCoefficients];
-            for (int i = 0; i < m_numIdentityCoefficients; ++i) m_identity[i] = 0.0f;
-            for (int i = 0; i < m_numExpressionCoefficients; ++i) m_expression[i] = 0.0f;
+            m_faceTracker = GetFaceTrackingAnchor();
+            if (m_faceTracker == null) 
+            { 
+                Debug.LogError("Missing face tracking anchor reference!");
+                gameObject.SetActive(false);
+                return; 
+            }
+
+            m_faceTracker.RegisterPipelineInitCallback(OnFaceTrackerPipelineInitialised, true);
+
+            CreateMesh(true);
+
+            if (m_faceTracker.FaceTrackingTarget == null) return;
+
+            if (m_faceTracker.FaceTrackingTarget.HasInitialized && !m_hasInitialised)
+                OnFaceTrackerPipelineInitialised(m_faceTracker.FaceTrackingTarget.FaceTrackerPipeline.Value, m_faceTracker.FaceTrackingTarget.IsMirrored);
         }
 
-        public void OnZapparInitialised(IntPtr pipeline)
+        private void OnFaceTrackerPipelineInitialised(IntPtr pipeline, bool mirrored)
         {
-            if (faceTracker != null)
+            m_isMirrored = mirrored;
+
+            m_hasInitialised = true;
+            HaveInitializedFaceMesh = false;
+
+            CreateMesh();
+        }
+
+        public void CreateMesh(bool force=false)
+        {
+            if (UnityMesh != null && !force)
+                return;
+
+            if (m_faceTracker == null)
+                m_faceTracker = GetFaceTrackingAnchor();
+
+            if (FaceMeshPtr == null)
             {
-                m_faceTrackingTargetPtr = faceTracker.m_faceTracker;
-                m_haveFaceTracker = true;
+                FaceMeshPtr = Z.FaceMeshCreate();
             }
             else
             {
-                Debug.Log("Warning: The face mesh will not update its vertices unless a Face Tracker is assigned.");
+                Z.FaceMeshDestroy(FaceMeshPtr.Value);
+                FaceMeshPtr = Z.FaceMeshCreate();
             }
 
-            m_hasInitialised = true;
-            m_haveInitialisedFaceMesh = false;
-
-            if (m_faceMesh == IntPtr.Zero)
-            {
-                m_faceMesh = Z.FaceMeshCreate();
-                CreateMesh();
-            }
-        }
-
-        public void OnMirroringUpdate(bool mirrored)
-        {
-            m_isMirrored = mirrored;
-            m_haveInitialisedFaceMesh = false;
-        }
-
-        protected void CreateMesh()
-        {
-            if (m_mesh != null)
-                return;
-            
+            DestroyUnityMesh();
             LoadMeshData();
 
-            m_mesh = new Mesh();
-            gameObject.GetComponent<MeshFilter>().sharedMesh = m_mesh;
-
-            UpdateMaterial();
+            UnityMesh = gameObject.GetComponent<MeshFilter>().sharedMesh ?? new Mesh();
+            UnityMesh.name = "ZFaceMesh" + (UseDefaultFullHead ? "_Full" : "");
+            gameObject.GetComponent<MeshFilter>().sharedMesh = UnityMesh;
 
             UpdateMeshData();
+            UpdateMaterial();
         }
-
-        public abstract void UpdateMaterial();
 
         private void LoadMeshData()
         {
 #if UNITY_EDITOR
             string filename;
-            if (useDefaultFullHead)
+            if (UseDefaultFullHead)
                 filename = Z.FaceMeshFullHeadSimplifiedModelPath();
             else
                 filename = Z.FaceMeshFaceModelPath();
             byte[] data = Z.LoadRawBytes(filename);
-            Z.FaceMeshLoadFromMemory(m_faceMesh, data, fillMouth, fillEyeLeft, fillEyeRight, fillNeck);
+            Z.FaceMeshLoadFromMemory(FaceMeshPtr.Value, data, FillMouth, FillEyeLeft, FillEyeRight, FillNeck);
 #else
-        if (useDefaultFullHead)
-        {
-            Z.FaceMeshLoadDefaultFullHeadSimplified(m_faceMesh, fillMouth, fillEyeLeft, fillEyeRight, fillNeck);
-        } else {
-            if (!fillEyeLeft && !fillEyeRight && !fillMouth) 
+            if (UseDefaultFullHead)
             {
-                Z.FaceMeshLoadDefault(m_faceMesh);
+                Z.FaceMeshLoadDefaultFullHeadSimplified(FaceMeshPtr.Value, FillMouth, FillEyeLeft, FillEyeRight, FillNeck);
             }
-            else Z.FaceMeshLoadDefaultFace(m_faceMesh, fillEyeLeft, fillEyeRight, fillMouth);
-        }
+            else
+            {
+                if (!FillEyeLeft && !FillEyeRight && !FillMouth)
+                {
+                    Z.FaceMeshLoadDefault(FaceMeshPtr.Value);
+                }
+                else Z.FaceMeshLoadDefaultFace(FaceMeshPtr.Value, FillEyeLeft, FillEyeRight, FillMouth);
+            }
 #endif            
         }
 
         private void UpdateMeshData()
         {
-            if (m_faceMesh == null)
+            if (UnityMesh == null || m_faceTracker == null)
                 return;
 
-#if !UNITY_EDITOR
-        if (m_haveFaceTracker && Z.FaceTrackerAnchorCount(m_faceTrackingTargetPtr) == 0)
-        {
-            return;
-        }
-#endif
-
-            if (!m_haveFaceTracker)
-            {
-                m_identity = new float[m_numIdentityCoefficients];
-                m_expression = new float[m_numExpressionCoefficients];
-                for (int i = 0; i < m_numIdentityCoefficients; ++i) m_identity[i] = 0.0f;
-                for (int i = 0; i < m_numExpressionCoefficients; ++i) m_expression[i] = 0.0f;
-            }
-            else
-            {
-                Z.FaceTrackerAnchorUpdateIdentityCoefficients(m_faceTrackingTargetPtr, 0, ref m_identity);
-                Z.FaceTrackerAnchorUpdateExpressionCoefficients(m_faceTrackingTargetPtr, 0, ref m_expression);
-            }
-
-            Z.FaceMeshUpdate(m_faceMesh, m_identity, m_expression, m_isMirrored);
+            Z.FaceMeshUpdate(FaceMeshPtr.Value, m_faceTracker.Identity, m_faceTracker.Expression, m_isMirrored);
 
             if (m_faceVertices==null || m_faceVertices.Length == 0)
             {
-                m_faceVertices = new float[Z.FaceMeshVerticesSize(m_faceMesh)];
-                m_faceNormals = new float[Z.FaceMeshNormalsSize(m_faceMesh)];
+                m_faceVertices = new float[Z.FaceMeshVerticesSize(FaceMeshPtr.Value)];
+                m_faceNormals = new float[Z.FaceMeshNormalsSize(FaceMeshPtr.Value)];
             }
 
-            Z.UpdateFaceMeshVertices(m_faceMesh, ref m_faceVertices);
-            Z.UpdateFaceMeshNormals(m_faceMesh, ref m_faceNormals);
-            m_mesh.vertices = Z.UpdateFaceMeshVerticesForUnity(m_faceVertices);
-            m_mesh.normals = Z.UpdateFaceMeshNormalsForUnity(m_faceNormals);
+            if (m_faceVertices.Length == 0) return;
 
-            if (!m_haveInitialisedFaceMesh)
+            Z.UpdateFaceMeshVertices(FaceMeshPtr.Value, ref m_faceVertices);
+            Z.UpdateFaceMeshNormals(FaceMeshPtr.Value, ref m_faceNormals);
+            UnityMesh.vertices = Z.UpdateFaceMeshVerticesForUnity(m_faceVertices);
+            UnityMesh.normals = Z.UpdateFaceMeshNormalsForUnity(m_faceNormals);
+
+            if (!HaveInitializedFaceMesh)
             {
-                m_mesh.triangles = Z.UpdateFaceMeshTrianglesForUnity(Z.FaceMeshIndices(m_faceMesh));
-                m_mesh.uv = Z.UpdateFaceMeshUVsForUnity(Z.FaceMeshUvs(m_faceMesh));
-                m_haveInitialisedFaceMesh = true;
+                UnityMesh.triangles = Z.UpdateFaceMeshTrianglesForUnity(Z.FaceMeshIndices(FaceMeshPtr.Value));
+                UnityMesh.uv = Z.UpdateFaceMeshUVsForUnity(Z.FaceMeshUvs(FaceMeshPtr.Value));
+                HaveInitializedFaceMesh = true;
             }
         }
 
-        void Update()
+        private void Update()
         {
-            if (!m_hasInitialised)
+            if (!m_hasInitialised || !m_faceTracker.FaceIsVisible)
                 return;
 
             UpdateMeshData();
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
-            if (m_faceMesh != null)
-                Z.FaceMeshDestroy(m_faceMesh);
+            m_faceTracker.RegisterPipelineInitCallback(OnFaceTrackerPipelineInitialised, false);
+            if (FaceMeshPtr != null && Application.isPlaying)
+                Z.FaceMeshDestroy(FaceMeshPtr.Value);
+
+            DestroyUnityMesh();
+            m_hasInitialised = false;
+        }
+
+        protected void DestroyUnityMesh()
+        {
 #if UNITY_EDITOR
             if (Application.isPlaying)
-                Destroy(m_mesh);
+                Destroy(UnityMesh);
             else
-                DestroyImmediate(m_mesh);
+                DestroyImmediate(UnityMesh);
 #else
-            Destroy(m_mesh);
+            Destroy(UnityMesh);
 #endif
-            m_haveInitialisedFaceMesh = false;
-            m_hasInitialised = false;
+            UnityMesh = null;
+            m_faceVertices = null;
+            m_faceNormals = null;
+            HaveInitializedFaceMesh = false;
         }
     }
 }

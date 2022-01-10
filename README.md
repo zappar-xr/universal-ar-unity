@@ -16,20 +16,23 @@ The [ZapWorks CLI](https://www.npmjs.com/package/@zappar/zapworks-cli) is a set 
 # Table of Contents
 
   * [Importing UAR package into Unity](#importing-uar-package-into-unity)
+    + [Update UAR package](#update-uar-package-to-latest-version)
   * [Platform support](#platform-support)
     + [Android](#android)
     + [iOS](#ios)
     + [WebGL](#webgl)
   * [Supporting Unity Scriptable Render Pipeline (SRP)](#supporting-unity-scriptable-render-pipeline)
-  * [Importing Examples](#importing-examples)
+  * [Importing Universal AR Samples](#importing-universal-ar-samples)
+  * [Zappar Image Training in Editor](#zappar-image-training-in-editor)
   * [Zappar Universal AR Settings](#zappar-universal-ar-settings)
   * [Licensing](#licensing)
-  * [Using the Prefabs](#using-the-prefabs)
-    + [Zappar Camera Prefab](#zappar-camera-prefab)
-    + [Face Tracker Prefab](#face-tracker-prefab)
-    + [Face Mesh Prefab](#face-mesh-prefab)
-    + [Image Tracker Prefab](#image-tracker-prefab)
-    + [Instant Tracking Prefab](#instant-tracking-prefab)
+  * [Using the SDK](#using-the-sdk)
+    + [Zappar Camera](#zappar-camera)
+    + [Face Tracking](#face-tracking)
+    + [Face Mesh](#face-mesh)
+    + [Face Landmark](#face-landmark)
+    + [Image Tracking](#image-tracking)
+    + [Instant Tracking](#instant-tracking)
   * [Extras](#extras)
     + [Enabling Realtime Reflection](#enabling-realtime-reflection)
   * [Advanced Usage](#advanced-usage)
@@ -70,8 +73,15 @@ Another option is to define the `universal-ar-unity` package as dependency in yo
 }
 ```
 
-Note that you can modify the source github URL to define any particular `tag` or `branch` as well, by adding suffix: `#ID` to the git URL. You can read more about it here: https://docs.unity3d.com/Manual/upm-git.html
+Note that you can modify the source github URL to define any particular `tag`, `branch` or `commit hash`, by adding suffix: `#ID` to the git URL. You can read more about it here: https://docs.unity3d.com/Manual/upm-git.html
 
+### Update UAR package to latest version
+
+In order to directly update the UAR package with the latest version on github use the following Zappar menu option `Zappar/Editor/Re-Import UAR Git Package`.
+
+![alt text](./Temp~/editor_menu.jpg "Update UAR Git package")
+
+Please note: we always ensure backward compatibility for new releases, however do go through the [CHANGELOG.md](https://github.com/zappar-xr/universal-ar-unity/blob/main/CHANGELOG.md) to be sure there are no breaking changes between your local version and latest version on Git.
 
 ## Platform support
 
@@ -99,17 +109,17 @@ The default graphics API on iOS is Metal, however there may be cases where you w
 
 This prevents the Zappar library from linking against the Metal framework.
 
-If you are building a Face Tracked experience (and / or if you're using the Face Mesh) for iOS you will need to add the `ZCV.bundle` file into the root level of your generated Xcode project. This file can be found in `Packages/com.zappar.uar/Resources/ZCV.bundle`, you can navigate to the location from Unity editor as well by selecting the bundle from editor then right-click on it and select `Show in Finder`. When including it into the project make sure that it is selected as a target of "Unity-iPhone" (or the relevant name of your application).
+If you are building a Face Tracked experience (and / or if you're using the Face Mesh) for iOS you will need to add the `ZCV.bundle` file into the root level of your generated Xcode project. This file can be found in `Packages/com.zappar.uar/Plugins/iOS/ZCV.bundle`, you can navigate to the location from Unity editor as well by selecting the bundle from editor then right-click on it and select `Show in Finder`. When including it into the project make sure that it is selected as a target of "Unity-iPhone" (or the relevant name of your application).
 
 ### WebGL
 
 While Unity's WebGL support for mobile is currently 'experimental', we've found it's possible to build great AR experiences with Unity and deploy to the web.
 
-The Zappar library provides an alternative template that shows a simple loading bar while the Unity content is loading, and fills the full browser window. You can use this template by navigating to the 'Resolution and Presentation' section in the Player Settings menu and selecting the 'Zappar2020' template (for Unity 2020) or the 'Zappar' template (for Unity 2019). You can alter this template by editing the Assets/WebGLTemplates/Zappar.../index.html file, or alternatively by placing your own index.html file inside a folder of your choice (itself inside the WebGLTemplates folder). For information on how to customize WebGL templates, please consult the [Unity documentation](https://docs.unity3d.com/Manual/webgl-templates.html).
+The Zappar library provides WebGL templates that shows a simple loading bar for Unity game instance and full screen browser window. You can use this template by navigating to the 'Resolution and Presentation' section in the Player Settings menu and selecting the 'Zappar' template (for Unity 2020 and above) or the 'Zappar2019' template (for Unity 2019). You can modify this template by editing the `Packages/com.zappar.uar/WebGLTemplates/Zappar.../index.html` file, or alternatively by placing your own index.html file inside a folder of your choice (itself inside the WebGLTemplates folder). For information on how to customize WebGL templates, please consult the [Unity documentation](https://docs.unity3d.com/Manual/webgl-templates.html).
 
-Due to browser restrictions surrounding use of the camera, you must use HTTPS to view or preview your site, even if doing so locally from your computer. This means that Unity's 'Build and Run' option will not work for previewing and testing your project.
+Due to browser restrictions surrounding the use of the camera, you must use HTTPS to view or preview your site, even if doing so locally from your computer. This means that Unity's 'Build and Run' option will not work for previewing and testing your project.
 
-You can use the ZapWorks command-line tool to serve your WebGL output folder over HTTPS for access on your local computer, like this:
+You can use the [ZapWorks command-line tool](https://www.npmjs.com/package/@zappar/zapworks-cli) to serve your WebGL output folder over HTTPS for access on your local computer, like this:
 
 ```
 zapworks serve
@@ -123,7 +133,7 @@ zapworks serve --lan
 
 Remember to run these commands within the folder that's generated by Unity when you build your project for WebGL - it should contain an `index.html` file.
 
-The ZapWorks CLI does not send a `Content-Encoding` header for Unity's gzip files, so it's best to set the `Publishing settings > Compression Format` setting to `Disabled` or `Enabling` `Publishing Settings > Decompression Fallback` if using the CLI.
+The ZapWorks CLI does not send a `Content-Encoding` header for Unity's gzip/br files, so it's best to set the `Publishing settings > Compression Format` setting to `Disabled` or `Enabling` `Publishing Settings > Decompression Fallback` if using the CLI.
 
 **Note you can also make use of menu option `Zappar/Editor/Update Project Settings To Publish` to make these specific changes around setting WebGL-Template and compression settings. Though you should always double check to confirm.**
 
@@ -134,27 +144,36 @@ ZapWorks provides complete serving and hosting for your WebGL-based experiences,
 
 In order to use the UAR SDK with Unity Scriptable Render Pipeline (SRP), you'll need to update the zappar editor settings. This setting can be accessed from Zappar menu `Editor/Update Project For SRP`.
 
-![alt text](./Temp~/snap2.jpg "Zappar menu options")
+![alt text](./Temp~/unity_srp.jpg "Zappar SRP options")
 
-This adds an additional scripting symbol `ZAPPAR_SRP` to the Unity project, which updates the internal zappar pipeline to support SRP rendering events. Please note if you were previously using `Standard Pipeline` you can update the existing scenefrom menu `Editor/Update Zappar Scene For SRP` as well. This option updates the camera settings.
+This adds an additional scripting symbol `ZAPPAR_SRP` to the Unity project, which updates the internal zappar pipeline to support SRP rendering events. Please note if you were previously using `Standard Pipeline` you can update the existing scene from menu `Editor/Update Zappar Scene For SRP` as well. This option updates the zappar camera object in scene to use SRP camera settings.
 
-If you have any missing material/shader in scene or while adding new zappar asset i.e. `Zappar/Face Tracker`, etc. you can find the appropriate material reference from examples scene. Please check below on how to add sample scenes from the package. Please note that along with updating the material in MeshRenderer component you will also need to update the material reference in Zappar script attached on the same object as well.
+If you have any missing material/shader in scene or while adding new zappar asset i.e. `Zappar/Face Tracker`, etc. you can find the appropriate material reference from `Packages/com.zappar.uar/Materials/URP/` or samples directory. Please check below on how to add sample scenes from the package. Please note that along with updating the material in MeshRenderer component you will also need to update the material reference in Zappar script attached on the same object as well.
 
-## Importing Examples
+## Importing Universal AR Samples
 
 Once the package has been successfully added, you should see additional option in the package window to add sample examples. You should select either one of the two samples available, depending upon whether or not you are using Unity SRP.
 
-![alt text](./Temp~/snap1.jpg "UAR Package Window")
+![alt text](./Temp~/package_win.jpg "UAR Package Window")
 
 Import them to add example scenes to your main project and start zapping in no time!
 
 ## Zappar Universal AR Settings
 
-You can access additional project level settings of UAR from `Zappar/Editor/OpenUARSettings`.
+You can access project level settings of Universal AR from `Zappar/Editor/Open Universal AR Settings`.
 
-![alt text](./Temp~/snap3.jpg "UAR Project Settings")
+![alt text](./Temp~/uar_settings.jpg "UAR Project Settings")
 
-The settings currently include options to enable/disable image preview for image tracking and some debugging options.
+The settings have been broadly categories under two sections - Runtime and Editor. Which allows you to control different aspects of the SDK in-editor and at runtime.
+
+
+## Zappar Image Training in Editor
+
+To create a new image target file `*.ZPT` open the `Zappar Image Trainer` window, which can be opened from `Zappar/Editor/Open Image Trainer`. Default parameters here should be okay for general usecase, but please note that you will need to enable `ZPT Overwrite` explicitly if the file already exists under `StreamingAssets`. Optionally you can also decide not to include image preview with `ZPT` file to minimize your build size.
+
+**Please note here the maxWidth and maxHeight refers to the training model param and doesn't resize your source or preview image. We recommend keeping it unchanged for optimum use.**
+
+![alt text](./Temp~/img_train.jpg "Image Trainer")
 
 
 ## Licensing
@@ -162,41 +181,58 @@ The settings currently include options to enable/disable image preview for image
 If you're building for iOS or Android, or you'd like to self-host a WebGL build on a domain of your own, you must register your app/site with ZapWorks. For more information see the [Licensing page](https://docs.zap.works/universal-ar/licensing/) at our documentation site.
 
 
-## Using the Prefabs
+## Using the SDK
 
-### Zappar Camera Prefab
+### Zappar Camera
 
-Once you've imported the package, the first step is to add the `Zappar Camera` prefab into your scene. Use the menu option `Zappar/Camera` to add zappar camera setup in the active scene. The resulting object is a regular Unity camera component with the following changes:
- - its camera parameters (e.g. focal length) will be set automatically by the Zappar library to match those of the physical camera on your device
+Once you've imported the package, the first step is to add the `Zappar Camera` object into your scene. Use the menu option `Zappar/Camera` to add zappar camera setup in the active scene. You can select between the Front (selfie or user facing) or the Rear camera of the device, which will internally select the appropriate camera at runtime (not applicable in Unity Playmode, where it will use the `EditorCamera`). The resulting object is a regular Unity camera component with the following changes:
+ - its camera parameters (e.g. focal length, etc) will be set automatically by the Zappar library to match those of the physical camera on your device
  - the physical camera feed will be drawn as a background to your scene
  - by default, the position of the camera is the origin of your scene, pointing down the Z axis. Objects that you track, e.g. the user's face, will move around in your scene so they appear in the correct location to the (stationary) camera.
 
-Remember to remove any other cameras you may have, or to mark the Zappar Camera as your primary/active camera.
+![Zappar Camera](./Temp~/camera.jpg "Zappar Camera")
 
 The camera object has a few options you may like to change:
  - 'Use Front-Facing Camera': this causes the Zappar library to display the 'selfie' camera to the user (rather than the rear-facing camera) - useful for face filter experiences.
  - 'Camera Attitude From Gyro': with this selected, the camera will remain at the origin of your scene, but rotate according to the device's orientation in 3D space. This means that your scene will remain flat with respect to gravity. This mode is useful if you have lighting effects or physics that require your scene to be aligned with the user's real-world environment.
- - 'Mirror Rear Cameras' and 'Mirror User Cameras': these options can be used to automatically mirror the camera background and 3D content. Users expect the content/image of user-facing cameras to be mirrored.
- - 'Anchor Origin': if this is set to an instance of one of the tracking prefabs, that instance will become the origin of your scene. In this mode the camera will move around that instance in 3D space (instead of remaining at the origin).
+ - 'Mirror  Cameras': these options can be used to automatically mirror the camera background and 3D content. Users expect the content/image of user-facing cameras to be mirrored.
+ - 'Anchor Origin': if this is set to an instance of one of the zappar tracker types, that instance will become the origin of your scene. In this mode the camera will move around that instance in 3D space (instead of remaining at the origin).
+
+Remember to remove any other cameras you may have, or to mark the Zappar Camera as your primary/active camera.
 
 
-### Face Tracker Prefab
+### Face Tracking
 
-Use menu option `Zappar/Face Tracker` to place Face Tracker prefab into your hierarchy, which allows you to place 3D content that's tracked to the user's head. It's ideal for building face filter experiences where users wear AR hats, glasses etc. Once the prefab is in place in your hierarchy, place 3D objects as children of that prefab for them to be tracked from the center of the user's head.
+Use menu option `Zappar/Face Tracker/Face Tracking Target` to place a Multi Face Tracking Target into your scene. This allows you to place 3D content that's tracked with respect to a user's face in the camera view. It's ideal for building face filter experiences such as - virtual try outs (AR hats, jewelry, glasses etc.). 
 
+![Face Tracker](./Temp~/face_track.jpg "Multi face tracking")
 
-### Face Mesh Prefab
+Once the face tracking target is placed in your hierarchy you will need to add tracking Anchors for this target. Use the `Add New Anchor` and `Remove Last Anchor` button on this `Zappar Multi Face Tracking Target` to add/remove new anchors. You can have multiple face tracking anchors, the total number of anchors is defined from `Concurrent Face Trackers` under [UAR settings](#zappar-universal-ar-settings), we recommend keeping this to a nominal value depending upon your usecase and device performance.
 
-![Face Mesh Settings](./Temp~/face_mesh.jpg)
-
-Use menu option `Zappar/Face Mesh` to place Face Mesh prefab into your hierarchy. This prefab provides a 3D mesh that fits with the user's face as their expression changes and their head moves. It exposes a Face Material parameter that can be set to any valid material (a UV map is provided that aids in development). Each of the Fill* options determine whether or not the relevant portion of the mesh is 'filled' when it is rendered.
-
-A Zappar Face Mesh requires a Zappar Face Tracker instance as its "Face Tracker" property (in the inspector). The Face Mesh can appear anywhere in the scene hierarchy, however you should place it as a child of the Face Tracker if you wish for the mesh to appear correctly attached to the face.
+Default face tracking anchor will contain two full head models which will act as reference (in editor) and depth mask for users face. You can place your AR experience or 3D objects as a child of this `Zappar Face Tracking Anchor` object for it to be tracked from the center of the user's head.
 
 
-### Image Tracker Prefab
+### Face Mesh
 
-Use menu option `Zappar/Image Tracker` to place Image Tracker prefab into your hierarchy. This prefab lets you attach 3D content to an image. It's great for putting 3D content onto posters, business cards, flyers etc. Once you've dragged the prefab into your hierarchy, you'll have to set the 'Target Filename' property to the 'target file' of the image you'd like to track. This file contains everything the Zappar library needs to detect and track the image in 3D space. You can generate them using the ZapWorks command-line utility like this:
+![Face Mesh](./Temp~/face_mesh.jpg "Face Mesh")
+
+Use menu option `Zappar/Face Tracker/Face Mesh` to place Face Mesh Target into your hierarchy. This target provides a 3D mesh that fits with the user's face as their expression changes and their head moves. It exposes a Face Material parameter that can be set to any valid Unity material (a UV map is provided that aids in development). Each of the Fill* options determine whether or not the relevant portion of the mesh is 'filled' when it is rendered.
+
+A `Zappar Face Mesh Target` requires a `Zappar Face Tracking Anchor` instance to function. The Face Mesh can appear anywhere in the scene hierarchy, however you should place it as a child of the Anchor if you wish for the mesh to appear correctly attached to the face.
+
+
+### Face Landmark
+
+![Face Landmark Settings](./Temp~/face_landmark.jpg)
+
+Use menu option `Zappar/Face Tracker/Face Landmark` to place Face Landmark object into your hierarchy. This object provides a tracker for facial landmark like - left/right eye, nose tip/bridge/base, etc. User can define specific landmark via the `Landmark Name` property. The specified landmark is tracked in 3D space and respective game object's Transform is updated in scene.
+
+A Zappar Face Landmark requires a `Zappar Face Tracking Anchor` instance to work. The Face Landmark can appear anywhere in the scene hierarchy, however you should place it as a child of the referenced Anchor object if you wish for the transform to appear correctly attached to the face.
+
+
+### Image Tracking
+
+Use menu option `Zappar/Image Tracking Target` to place Image Tracker prefab into your hierarchy. This prefab lets you attach 3D content to an image. It's great for putting 3D content onto posters, business cards, flyers etc. Once you've dragged the prefab into your hierarchy, you'll have to set the 'Target Filename' property to the 'target file' of the image you'd like to track. This file contains everything the Zappar library needs to detect and track the image in 3D space. You can generate these either using the zappar's in-built [image trainer](#zappar-image-training-in-editor) for Unity or generate them using the ZapWorks command-line utility like this:
 ```
 zapworks train myImage.png
 ```
@@ -206,34 +242,41 @@ You can then import the resulting `.zpt` file into the following folder `Assets/
 ![Image Tracking Settings](./Temp~/img_track.jpg)
 
 
-### Instant Tracking Prefab
+### Instant Tracking
 
-Use menu option `Zappar/Instant Tracker` to place Instant world tracking prefab into your hierarchy. Instant world tracking refers to the ability to attach content to a point in the world, without using a tracking image or marker. You do not need to specify any properties to use Instant World Tracking. Simply attach your content as a child of the ZapparInstantTracking GameObject and it will appear in the correct location. The Zappar Instant Tracker prefab will keep the content in front of the camera until the user taps on the screen, at which point the content will appear to remain anchored in place. You can override this tap and place behavior as you wish. Please refer to the [Instant Tracking API](#instant-world-tracking) section for further details.
+![Instant Tracking](./Temp~/instant_track.jpg)
 
+Use menu option `Zappar/Instant Tracking Target` to place Instant Tracking Target object into your hierarchy. Instant tracking refers to the ability to attach content to a point in the world (i.e. anchor), without using any tracking target like - image, face, etc. Simply attach your content as a child of the `Zappar Instant Tracking Target` GameObject and it will appear in the correct location. 
+
+The Zappar Instant Tracker prefab will keep the content in front of the camera using the `AnchorOffsetFromCamera` value until the user set the flag for `UserHasPlace`, at which point the content will appear to remain anchored in 3D space. By default this behavior is mapped to user tap event (`PlaceOnTouch`), which is optional and you can instead call `ZapparInstantTrackingTarget.PlaceTrackerAnchor`. You can override this behavior as you wish. Please refer to the [Instant Tracking API](#instant-world-tracking) section for further details.
+
+**Note that this tracking is not supported in the Editor mode, due to lack of sensory data required for SLAM!**
 
 ## Extras
 
 ### Enabling Realtime Reflection
 
-![alt text](./Temp~/snap4.jpg "Realtime reflection")
+![alt text](./Temp~/real_ref.jpg "Realtime reflection")
 
 To enable the realtime reflection for your reflective materials, follow the following process:
-1. Make sure realtime reflection is enabled from Unity project settings. `Edit/ProjectSettings/Quality` and check `Realtime Reflection Probes`.
-2. Enable `Enable Realtime Refections` from menu `Zappar/Editor/OpenUARSettings`. This will add a new layer `ZapparReflect` to your project.
-3. Right click on `ZapparCameraRear` (Camera object containing `ZapparCamera` script) and select `Zappar/AddRealtimeReflectionProbe`.
+1. Make sure realtime reflection is enabled in your Unity project settings. `Edit/ProjectSettings/Quality` and check `Realtime Reflection Probes`. Note that you may have different levels of quality settings between Editor and your build target.
+2. Enable `Enable Realtime Refections` from menu `Zappar/Editor/Open Universal AR Settings`. This will add a new layer `ZapparReflect` to your project.
+3. Create a new reflection probe object using `Zappar/Realtime Reflection Probe` menu option. 
 4. Adjust the `ZapparReflectionProbe` properties according to your project needs.
+
+![alt text](./Temp~/reflect.jpg "Realtime reflection probe")
 
 
 ## Advanced Usage
 
-The prefabs above are great for most use cases, and you may find they've got everything you need for your next AR project. That said, the Zappar library does provide a rich API that you can use should you require detailed control of the computer vision libraries.
+The default usage of SDK as explained above is great for most use cases, and you may find they've got everything you need for your next AR project. However, the Zappar library does provide a rich API that you can use should you require detailed control of the computer vision libraries.
 
 
 ### Pipelines and Camera Processing
 
 In the Zappar library, a pipeline is used to manage the flow of data coming in (i.e. the frames) through to the output from the different tracking types and computer vision algorithms. While most projects will only need one pipeline, it is possible to create as many as you like. Each pipeline can only have one active source of frames (i.e. one camera, or one video), so if you'd like to simultaneously process frames from multiple sources then you'll need a pipeline for each.
 
-We have provided a default `ZapparCamera` implementation that acts as a wrapper around a *single* pipeline. This camera manages a list of listeners (tracking targets) and ensures that both the Zappar library and its own pipeline are initialized before tracking targets themselves initialize.
+We have provided a default `ZapparCamera.cs` implementation that acts as a wrapper around a *single* pipeline. This camera manages a list of listeners (tracking targets) and ensures that both the Zappar library and its own pipeline are initialized before tracking targets themselves initialize.
 
 
 #### Constructing and Managing Pipelines

@@ -6,115 +6,128 @@ using UnityEngine.Experimental.Rendering;
 
 namespace Zappar
 {
-    public class ZapparReflectionProbe : MonoBehaviour, ZapparCamera.ICameraListener
+    public class ZapparReflectionProbe : MonoBehaviour, ICameraListener
     {
         public const string ReflectionLayer = "ZapparReflect";
-        
-        [Tooltip("Must be a power of 2")]
-        [SerializeField]
-        private int mapResolution = 32;
-        [SerializeField]
-        private int probeSize = 50;
+        [SerializeField, Tooltip("Must be a power of 2")]
+        private int m_mapResolution = 32;
+        [SerializeField, Tooltip("Ensure this size(Green Box) covers your model to apply the realtime reflection")]
+        private int m_probeSize = 50;
+
+        [SerializeField, Tooltip("GameObject layers to use for realtime reflection. Default is ZapparReflect.")]
+        private LayerMask m_cullingMask = 0;
 
         [SerializeField]
-        private LayerMask cullingMask = 0;
+        private ReflectionProbeTimeSlicingMode m_timeSlicingMode = ReflectionProbeTimeSlicingMode.AllFacesAtOnce;
 
-        [SerializeField]
-        private ReflectionProbeTimeSlicingMode timeSlicingMode = ReflectionProbeTimeSlicingMode.AllFacesAtOnce;
+        private Transform m_cameraTransform = null;
+        private MeshRenderer m_camTextureProjectionSurface = null;
+        private ReflectionProbe m_reflectionProbe = null;
+        private ZapparCameraBackground m_cameraBackground = null;
 
-        private Transform cameraTransform = null;
-        private MeshRenderer camTextureProjectionSurface = null;
-        private ReflectionProbe reflectionProbe = null;
-        private ZapparCameraBackground cameraBackground = null;
+        private bool m_hasInitialized = false;
+        //private bool m_isMirrored = false;
+        private bool m_isPaused = false;
 
-        private bool m_hasInitialised = false;
-        private bool m_isMirrored = false;
-
-        public void OnZapparInitialised(IntPtr pipeline)
+        public void OnZapparInitialized(IntPtr pipeline)
         {
             if (!gameObject.activeInHierarchy)
             {
                 return;
             }
-            m_hasInitialised = true;
+            m_hasInitialized = true;
         }
+
+        public void OnZapparCameraPaused(bool pause) { m_isPaused = pause; }
 
         public void OnMirroringUpdate(bool mirrored)
         {
-            m_isMirrored = mirrored;
+            //m_isMirrored = mirrored;
         }
 
         private void OnEnable()
         {
-            if(cullingMask==0)
+            if(m_cullingMask==0)
             {
-                Debug.Log("Please define the culling mask for reflection");
-                cullingMask = LayerMask.GetMask(new[] { ReflectionLayer });
+                Debug.Log("Please define the culling mask for reflection. Using default layer: " + ReflectionLayer);
+                m_cullingMask = LayerMask.GetMask(new[] { ReflectionLayer });
             }
         }
 
         private void Start()
         {
-            if (mapResolution == 0 || (mapResolution & (mapResolution - 1)) != 0)
+            if(ZapparCamera.Instance == null)
             {
-                mapResolution = (int)Mathf.Pow(2, (int)Mathf.Log(mapResolution, 2) + 1);
+                gameObject.SetActive(false);
+                Debug.LogError("No Active Zappar Camera found in scene");
+                return;
             }
 
-            if (ZapparCamera.Instance != null)
-                ZapparCamera.Instance.RegisterCameraListener(this);
+            if (m_mapResolution == 0 || (m_mapResolution & (m_mapResolution - 1)) != 0)
+            {
+                m_mapResolution = (int)Mathf.Pow(2, (int)Mathf.Log(m_mapResolution, 2) + 1);
+            }
+
+            ZapparCamera.Instance.RegisterCameraListener(this, true);
 
             //Ignore the ReflectionLayer from main zappar camera
             Camera zapCam = ZapparCamera.Instance.gameObject.GetComponent<Camera>();
-            zapCam.cullingMask &= ~cullingMask;
-            cameraTransform = ZapparCamera.Instance.gameObject.transform;
-            cameraBackground = cameraTransform.GetComponentInChildren<ZapparCameraBackground>();
+            zapCam.cullingMask &= ~m_cullingMask;
+            m_cameraTransform = ZapparCamera.Instance.gameObject.transform;
+            m_cameraBackground = m_cameraTransform.GetComponentInChildren<ZapparCameraBackground>();
 
-            camTextureProjectionSurface = gameObject.transform.GetComponentInChildren<MeshRenderer>(true);
-            if(camTextureProjectionSurface==null)
+            m_camTextureProjectionSurface = gameObject.transform.GetComponentInChildren<MeshRenderer>(true);
+            if(m_camTextureProjectionSurface==null)
             {
                 GameObject go = GetTextureProjectionSurface();
                 go.transform.SetParent(this.transform);
                 go.transform.localScale = new Vector3(100, 100, 100);
-                camTextureProjectionSurface = go.GetComponent<MeshRenderer>();
+                m_camTextureProjectionSurface = go.GetComponent<MeshRenderer>();
                 go.layer = LayerMask.NameToLayer(ReflectionLayer);
             }
-            camTextureProjectionSurface.gameObject.SetActive(true);
+            m_camTextureProjectionSurface.gameObject.SetActive(true);
             //camTextureProjectionSurface.material.mainTextureScale = new Vector2(1, -1);
 
             UpdateReflectionProbe();
+
+            if (ZapparCamera.Instance.CameraSourceInitialized && !m_hasInitialized)
+            {
+                OnMirroringUpdate(ZapparCamera.Instance.MirrorCamera);
+                OnZapparCameraPaused(ZapparCamera.Instance.CameraSourcePaused);
+                OnZapparInitialized(ZapparCamera.Instance.GetPipeline);
+            }
         }
 
         private void UpdateReflectionProbe()
         {
-            reflectionProbe = gameObject.GetComponentInChildren<ReflectionProbe>() ?? gameObject.AddComponent<ReflectionProbe>();
+            m_reflectionProbe = gameObject.GetComponentInChildren<ReflectionProbe>() ?? gameObject.AddComponent<ReflectionProbe>();
 
-            reflectionProbe.mode = ReflectionProbeMode.Realtime;
-            reflectionProbe.refreshMode = ReflectionProbeRefreshMode.EveryFrame;
-            reflectionProbe.resolution = mapResolution;
-            reflectionProbe.clearFlags = ReflectionProbeClearFlags.SolidColor;
-            reflectionProbe.backgroundColor = Color.black;
-            reflectionProbe.size = Vector3.one * probeSize;
-            reflectionProbe.cullingMask = cullingMask;
-            reflectionProbe.timeSlicingMode = timeSlicingMode;
+            m_reflectionProbe.mode = ReflectionProbeMode.Realtime;
+            m_reflectionProbe.refreshMode = ReflectionProbeRefreshMode.EveryFrame;
+            m_reflectionProbe.resolution = m_mapResolution;
+            m_reflectionProbe.clearFlags = ReflectionProbeClearFlags.SolidColor;
+            m_reflectionProbe.backgroundColor = Color.black;
+            m_reflectionProbe.size = Vector3.one * m_probeSize;
+            m_reflectionProbe.cullingMask = m_cullingMask;
+            m_reflectionProbe.timeSlicingMode = m_timeSlicingMode;
         }
 
         private void OnDestroy()
         {
-            Destroy(reflectionProbe);
+            Destroy(m_reflectionProbe);
+            ZapparCamera.Instance?.RegisterCameraListener(this, false);
         }
 
         private void LateUpdate()
         {
-            if (!m_hasInitialised)
-            {
+            if (!m_hasInitialized || m_isPaused) 
                 return;
-            }
 
-            camTextureProjectionSurface.material.SetMatrix("_nativeTextureMatrix", cameraBackground.GetTextureMatrix);
-            camTextureProjectionSurface.material.mainTexture = cameraBackground.GetCameraTexture;
-            camTextureProjectionSurface.transform.rotation = cameraTransform.rotation * Quaternion.AngleAxis(90, Vector3.up);
+            m_camTextureProjectionSurface.material.SetMatrix("_nativeTextureMatrix", m_cameraBackground.GetTextureMatrix);
+            m_camTextureProjectionSurface.material.mainTexture = m_cameraBackground.GetCameraTexture;
+            m_camTextureProjectionSurface.transform.rotation = m_cameraTransform.rotation * Quaternion.AngleAxis(90, Vector3.up);
 
-            reflectionProbe?.RenderProbe();
+            m_reflectionProbe?.RenderProbe();
         }
 
         private GameObject GetTextureProjectionSurface()
@@ -136,7 +149,7 @@ namespace Zappar
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(0.1f, 0.9f, 0, 0.5f);
-            Gizmos.DrawWireCube(transform.position, Vector3.one * probeSize);
+            Gizmos.DrawWireCube(transform.position, Vector3.one * m_probeSize);
         }
     }
 }

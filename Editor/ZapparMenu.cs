@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Collections;
 using UnityEngine.Rendering;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
@@ -11,91 +12,54 @@ namespace Zappar.Editor
 {
     public class ZapparMenu : MonoBehaviour
     {
-        private static ListRequest packageListRequest = null;
+        private static ListRequest s_packageListRequest = null;
+        private static AddRequest s_importRequest = null;
 
-        [MenuItem("Zappar/Camera")]
-        static void ZapparCreateCamera()
+        public delegate void PackageListUpdated(ListRequest request);
+        public static PackageListUpdated OnPackageListUpdated;
+
+#region UtilitiesMenu
+        [MenuItem("Zappar/Utilities/Full Head Model", false, 100)]
+        public static void ZapparCreateFullHeadModel()
         {
-            GameObject camera = (GameObject)Resources.Load("Prefabs/Zappar Camera Rear");
-            GameObject go = Instantiate(camera, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New camera added");
-
-            var settings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPath);
-            if(settings.EnableRealtimeReflections)
-            {
-                GameObject rp = new GameObject("ZReflectionProbe");
-                rp.transform.SetParent(go.transform);
-                rp.AddComponent<ZapparReflectionProbe>();
-            }
-
-#if ZAPPAR_SRP
-            ZapparUpdateSceneToSRP();
-#endif
+            GameObject head = ZAssistant.GetZapparFullHeadModel();
+            Undo.RegisterCreatedObjectUndo(head, "New head model");
+            Selection.activeGameObject = head;
         }
 
-        [MenuItem("Zappar/Face Tracker")]
-        static void ZapparCreateFaceTrackingTarget()
+        [MenuItem("Zappar/Utilities/Full Head Depth Mask", false, 100)]
+        public static void ZapparCreateFullHeadDepthMask()
         {
-            GameObject faceTarget = (GameObject)Resources.Load("Prefabs/Zappar Face Tracker");
-            GameObject go = Instantiate(faceTarget, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go,"New face target");
+            GameObject head = ZAssistant.GetZapparFullHeadDepthMask();
+            Undo.RegisterCreatedObjectUndo(head, "New depth mask");
+            Selection.activeGameObject = head;
         }
 
-        [MenuItem("Zappar/Face Mesh")]
-        static void ZapparCreateFaceMeshTarget()
-        {
-            GameObject faceMesh = (GameObject)Resources.Load("Prefabs/Zappar Face Mesh");
-            GameObject go = Instantiate(faceMesh, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New face mesh");
-        }
-
-        [MenuItem("Zappar/Image Tracker")]
-        static void ZapparCreateImageTrackingTarget()
-        {
-            GameObject imageTarget = (GameObject)Resources.Load("Prefabs/Zappar Image Tracker");
-            GameObject go = Instantiate(imageTarget, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New image tracker");
-        }
-
-        [MenuItem("Zappar/Instant Tracker")]
-        static void ZapparCreateInstantTrackingTarget()
-        {
-            GameObject instantTarget = (GameObject)Resources.Load("Prefabs/Zappar Instant Tracker");
-            GameObject go = Instantiate(instantTarget, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New instant tracker");
-        }
-
-        [MenuItem("Zappar/Utilities/Full Head Model", false, 0)]
-        static void ZapparCreateFullHeadModel()
-        {
-            GameObject headModel = (GameObject)Resources.Load("Prefabs/Zappar Full Head Model");
-            GameObject go = Instantiate(headModel, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New head model");
-        }
-
-        [MenuItem("Zappar/Utilities/Full Head Depth Mask", false, 0)]
-        static void ZapparCreateFullHeadDepthMask()
-        {
-            GameObject headDepthMask = (GameObject)Resources.Load("Prefabs/Zappar Face Depth Mask");
-            GameObject go = Instantiate(headDepthMask, Vector3.zero, Quaternion.identity);
-            Undo.RegisterCreatedObjectUndo(go, "New depth mask");
-        }
-
-        [MenuItem("Zappar/Utilities/Documentation", false, 0)]
-        static void ZapparOpenDocumentation()
+        [MenuItem("Zappar/Utilities/Documentation", false, 120)]
+        public static void ZapparOpenDocumentation()
         {
             Application.OpenURL("https://docs.zap.works/universal-ar/unity");
         }
 
-        [MenuItem("Zappar/Editor/OpenUARSettings", false, 1)]
-        static void ZapparOpenUarSettings()
+        [MenuItem("Zappar/Utilities/Install CLI", false, 120)]
+        public static void ZapparOpenZapworksCLI()
+        {
+            Application.OpenURL("https://www.npmjs.com/package/@zappar/zapworks-cli");
+        }
+
+        #endregion
+
+        #region EditorMenu
+
+        [MenuItem("Zappar/Editor/Open Universal AR Settings", false, 15)]
+        public static void ZapparOpenUarSettings()
         {
             SettingsService.OpenProjectSettings("Project/ZapparUARSettings");
         }
 
 #if ZAPPAR_SRP
         [MenuItem("Zappar/Editor/Update Project For StandardPipeline", false, 1)]
-        static void ZapparUpdateProjectToNonSRP()
+        public static void ZapparUpdateProjectToNonSRP()
         {
             Debug.Log("Updating zappar to use standard pipeline");
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
@@ -116,8 +80,8 @@ namespace Zappar.Editor
             PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols);
         }
 
-        [MenuItem("Zappar/Editor/Update Zappar Scene For SRP", false, 1)]
-        static void ZapparUpdateSceneToSRP()
+        [MenuItem("Zappar/Editor/Update Zappar Scene For SRP", false, 2)]
+        public static void ZapparUpdateSceneToSRP()
         {
             Debug.Log("Updating current scene to use Unity-SRP");
             Camera uCam = GameObject.FindObjectOfType<ZapparCamera>().gameObject.GetComponent<Camera>();
@@ -151,7 +115,7 @@ namespace Zappar.Editor
         }
 #else
         [MenuItem("Zappar/Editor/Update Project For SRP", false, 1)]
-        static void ZapparUpdateProjectToSRP()
+        public static void ZapparUpdateProjectToSRP()
         {
             Debug.Log("Updating zappar project to use Unity-SRP");
             const string zapparSrp = "ZAPPAR_SRP";
@@ -167,101 +131,220 @@ namespace Zappar.Editor
             }
 
             //Check if Universal Rendering package has been imported already
-            packageListRequest = Client.List(true, true);
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = UnityRenderPipelineCheck;
             EditorApplication.update += PackageProgress;
 
             PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols + ";" + zapparSrp);
+            Debug.Log("Done!");
         }
 #endif
 
+        [MenuItem("Zappar/Editor/Update Project Settings To Publish", false, 3)]
+        public static void ZapparPublishSettings()
+        {
+#if UNITY_WEBGL
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.WebGLAll);
+#elif UNITY_ANDROID
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.AndroidAll);
+#elif UNITY_IOS
+            ZAssistant.UpdateUnityProjectSettings(ZProjectSettingsConfig.IosAll);
+#endif
+            Debug.Log("Done updating editor related project settings for publish");
+        }
+
+        [MenuItem("Zappar/Editor/Re-Import Universal AR Git Package", false, 28)]
+        public static void ReimportUARPackage()
+        {
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = StartUARReimport;
+            EditorApplication.update += PackageProgress;
+        }
+
+        private static void StartUARReimport(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                string packageId = "";
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.zappar.uar"))
+                    { avail = true; packageId = pack.packageId; break; }
+                }
+
+                if (avail)
+                {
+
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(packageId);
+                    Debug.Log("Reimporting: " + packageId);
+                    EditorApplication.update += PackageProgress;
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog("Zappar Notification", "No Universal AR package found!", "OK");
+                }
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for Universal AR zappar package. Error: " + request.Error.message);
+            }
+        }
+
+        #endregion
+
+        #region CameraMenu
+
+        [MenuItem("Zappar/Camera/Front Facing Camera", false, 30)]
+        public static void ZapparCreateUserCamera()
+        {
+            GameObject go = ZAssistant.GetZapparCamera(true);
+            UpdateZapparCamera(go);
+        }
+
+        [MenuItem("Zappar/Camera/Rear Facing Camera", false, 30)]
+        public static void ZapparCreateCamera()
+        {
+            GameObject go = ZAssistant.GetZapparCamera(false);
+            UpdateZapparCamera(go);
+        }
+
+        private static void UpdateZapparCamera(GameObject go)
+        {
+            Undo.RegisterCreatedObjectUndo(go, "New camera added");
+
+            var settings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPathInPackage);
+            if (settings.EnableRealtimeReflections)
+            {
+                GameObject rp = new GameObject("ZReflectionProbe");
+                rp.transform.SetParent(go.transform);
+                rp.AddComponent<ZapparReflectionProbe>();
+            }
+
+#if ZAPPAR_SRP
+            ZapparUpdateSceneToSRP();
+#endif
+            Selection.activeGameObject = go;
+        }
+
+        #endregion
+
+        #region FaceMenu
+
+        [MenuItem("Zappar/Face Tracker/Face Tracking Target", false, 30)]
+        public static void ZapparCreateFaceTrackingTarget()
+        {
+            GameObject go = ZAssistant.GetZapparMultiFaceTrackingTarget();
+            Undo.RegisterCreatedObjectUndo(go, "New face target");
+            Selection.activeGameObject = go;
+        }
+
+        [MenuItem("Zappar/Face Tracker/Face Mesh", false, 31)]
+        public static void ZapparCreateFaceMeshTarget()
+        {
+            GameObject go = ZAssistant.GetZapparFaceMeshTarget();
+            Undo.RegisterCreatedObjectUndo(go, "New face mesh");
+            Selection.activeGameObject = go;
+        }
+
+        [MenuItem("Zappar/Face Tracker/Face Landmark", false, 32)]
+        public static void ZapparCreateFaceLandmark()
+        {
+            GameObject go = ZAssistant.GetZapparFaceLandmark();
+            Undo.RegisterCreatedObjectUndo(go, "New face landmark");
+            Selection.activeGameObject = go;
+        }
+
+        #endregion
+
+        #region ImageMenu
+
+        [MenuItem("Zappar/Image Tracking Target", false, 31)]
+        public static void ZapparCreateImageTrackingTarget()
+        {
+            GameObject go = ZAssistant.GetZapparImageTrackingTarget();
+            Undo.RegisterCreatedObjectUndo(go, "New image tracker");
+            Selection.activeGameObject = go;
+        }
+
+        #endregion
+
+        #region InstantMenu
+
+        [MenuItem("Zappar/Instant Tracking Target", false, 33)]
+        public static void ZapparCreateInstantTrackingTarget()
+        {
+            GameObject go = ZAssistant.GetZapparInstantTrackingTarget();
+            Undo.RegisterCreatedObjectUndo(go, "New instant tracker");
+            Selection.activeGameObject = go;
+        }
+
+        #endregion
+
+        private static void UnityRenderPipelineCheck(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.unity.render-pipelines.universal"))
+                    { avail = true; break; }
+                }
+
+                if (!avail)
+                {
+                    //Raise dialog to import URP
+                    EditorUtility.DisplayDialog("Zappar Notification", "Missing Unity Universal Rendering Pipeline package! Please add the package to your project!", "OK");
+                }
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for Universal Rendering package. Error: " + request.Error.message);
+            }
+        }
 
         private static void PackageProgress()
         {
-            if(packageListRequest!= null && packageListRequest.IsCompleted)
+            if(s_packageListRequest!= null && s_packageListRequest.IsCompleted)
             {
-                if(packageListRequest.Status == StatusCode.Success)
-                {
-                    bool avail = false;
-                    foreach(var pack in packageListRequest.Result)
-                    {
-                        if (pack.packageId.ToLower().Contains("com.unity.render-pipelines.universal"))
-                        { avail = true; break; }
-                    }
+                EditorApplication.update -= PackageProgress;
+                OnPackageListUpdated.Invoke(s_packageListRequest);
+                s_packageListRequest = null;
+            }
 
-                    if(!avail)
-                    {
-                        //Raise dialog to import URP
-                        EditorUtility.DisplayDialog("Zappar Notification", "Please add the Universal Rendering Pipeline package to your project!", "OK");
-                    }
-                }else if(packageListRequest.Status >= StatusCode.Failure)
+            if (s_importRequest != null)
+            {
+                if (s_importRequest.Status == StatusCode.Failure)
                 {
-                    Debug.LogError("Failed to check for Universal Rendering package. Error: " + packageListRequest.Error.message);
+                    Debug.Log("Import ("+ s_importRequest.Result?.packageId + ") failed: " + s_importRequest.Error.message);
+                    EditorApplication.update -= PackageProgress;
+                    s_importRequest = null;
                 }
 
-                EditorApplication.update -= PackageProgress;
-                packageListRequest = null;
+                if (s_importRequest.Status == StatusCode.Success)
+                {
+                    Debug.Log("Finished importing: " + s_importRequest.Result?.packageId);
+                    EditorApplication.update -= PackageProgress;
+                    s_importRequest = null;
+                    PackageImportSettings.RefreshPackage();
+                }
             }
         }
 
-        [MenuItem("Zappar/Editor/Update Project Settings To Publish", false, 1)]
-        static void ZapparPublishSettings()
+        [MenuItem("Zappar/Realtime Reflection Probe", false, 34)]
+        public static void CreateZapparReflectionProbe()
         {
-#if UNITY_WEBGL
-            // Other Settings
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP); //default is IL2CPP
-            PlayerSettings.stripEngineCode = true;
-
-            //Publishing settings
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
-            PlayerSettings.WebGL.dataCaching = true;
-
-            //Build Settings
-            EditorUserBuildSettings.development = false;
-#if UNITY_2020_1_OR_NEWER
-            PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "PROJECT:Zappar2020";
-#elif UNITY_2018_1_OR_NEWER
-            PlayerSettings.WebGL.template = "PROJECT:Zappar";
-#else
-            Debug.LogError("Please upgrade to newer versions of Unity");
-#endif
-#elif UNITY_ANDROID
-
-            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            
-            //Build Settings
-            EditorUserBuildSettings.development = false;
-#else
-            PlayerSettings.stripEngineCode = true;
-
-            //Build Settings
-            EditorUserBuildSettings.development = false;
-#endif
-
-            Debug.Log("Done updating project setting for publish");
-        }
-
-        [MenuItem("Zappar/Utilities/Install CLI", false, 0)]
-        static void ZapparOpenZapworksCLI()
-        {
-            Application.OpenURL("https://www.npmjs.com/package/@zappar/zapworks-cli");
-        }
-
-        [MenuItem("GameObject/Zappar/Add Realtime Reflection Probe", false, 10)]
-        static void CreateZapparReflectionProbe(MenuCommand menuCommand)
-        {
-            var settings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPath);
+            var settings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPathInPackage);
             if (!settings.EnableRealtimeReflections)
             {
-                Debug.Log("Please enable the realtime reflection from UAR settings! Zappar/Editor/OpenUARSettings");
+                Debug.Log("Please enable the realtime reflection from UAR settings! Zappar/Editor/Open Universal AR Settings");
                 return;
             }
-
-            GameObject parent = menuCommand.context as GameObject;
-            if(parent?.GetComponent<ZapparCamera>()==null)
+            ZapparCamera zCam = GameObject.FindObjectOfType<ZapparCamera>();
+            if (zCam==null)
             {
-                Debug.LogError("Can't find zappar camera componnet on parent");
+                Debug.LogError("Can't find zappar camera in scene!");
                 return;
             }
 
@@ -282,7 +365,7 @@ namespace Zappar.Editor
         }
 
         [MenuItem("GameObject/Zappar/Invert Mesh Surface", false, 10)]
-        static void InvertSelectedMeshSurface(MenuCommand menuCommand)
+        public static void InvertSelectedMeshSurface(MenuCommand menuCommand)
         {
             GameObject parent = menuCommand.context as GameObject;
             

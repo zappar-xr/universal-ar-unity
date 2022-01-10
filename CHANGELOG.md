@@ -4,6 +4,69 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2022-01-04
+### Fixed
+- ZapparFaceMesh is not visible when kept disabled on start. This was due to delay in receiving mesh data (verts, tris, etc.) immediately after initialization.
+
+## [3.0.0] - 2021-12-20
+### Added
+- Multiple face tracking.
+- Switch between front and rear camera at runtime using `SwitchToFrontCameraMode` and `SwitchToRearCameraMode` respectively.
+- Toggle the active state of Zappar Camera to pause and unpause. Use `ToggleActiveCamera` method in ZapparCamera.cs.
+
+### Changed
+- New flow for adding Face tracking target and subsequent anchors.
+- Removed zappar prefabs from the Resources folder to optimize the build size. Instead, now use Zappar editor menu to create Zappar obects in scene.
+- Improved anchor placement for Instant tracker with permissible range for Z-movement before the anchor placement. Enable this behaviour by checking the flag `MoveAnchorOnZ`.
+- Replaced `MirrorRearCameras` and `MirrorUserCamera` under `ZapparCamera.cs` with `MirrorCamera`.
+- Moved ZapparReflectionProbe from ZaparCamera object context menu to Editor Menu.
+- Zappar Menu order in Editor has been updated.
+
+### Fixed
+- Zappar tracking target to register with Zappar camera pipeline whenever set to active, rather than having to enabled it along with ZapparCamera or keeping it active at the start of the scene.
+
+
+## [2.0.0] - 2021-11-19
+### Added
+- Support for facial landmarks in face tracking.
+- UAR setting to control zappar permission UI prompt in WebGL.
+
+### Changed
+- Instant update of image preview in editor for image tracking target.
+- Renamed several variables across the SDK. Updating the package will result in loosing any previously set references in editor or used in scripts.
+- Updated ZapparInstantTrackingTarget to expose `UserHasPlaced` flag and additional method to place and reset virtual anchors (`PlaceTrackerAnchor`/`ResetTrackerAnchor`).
+
+### Fixed
+- Nullable IntPtr for zappar trackers and pipeline.
+- Image Trainer overwrite check before starting the training process.
+- UV mapping of preview texture on Safari.
+- Missing Pointer_stringify in WebGL Build.
+- Unity InputSystem failed to capture inputs on few mobile browsers after permissions popup.
+- Missing APIs for Face Landmark in windows editor.
+
+## [1.2.1] - 2021-10-15
+### Fixed
+- iPad loading issue.
+- support WebGL development build. Fixed emcc error of missing graphics API.
+- blurry canvas on retina and HiDPI mobile browsers
+
+## [1.2.0] - 2021-09-22
+### Added
+- Zappar image training in editor.
+- Renamed WebGL templates to - `Zappar` (for Unity version 2020 and above) and `Zappar2019` (for Unity version 2019.x).
+- Exempt additional IP addresses ranging from 172.16.* through 172.32.* from licensing check.
+
+### Fixed
+- White screen issue after loading progress on Safari browsers.
+- Fix to update the face mesh view in editor (while toggling between full head mesh).
+- Fix referencing image preview when project GUID has been updated. [Note: finds reference using gameobject name and meshfilter component]
+- Fix camera pause/resume when switching to other tabs and back.
+- Improve HTML template CSS to better fit the full browser window.
+- Issues with other/embedded browsers on iOS, including social browsers.
+
+### Known issues
+ - Sometimes the app freezes on iOS browser while switching between tabs. To workaround this make sure to check - `Run In Background` setting from `Project Settings > Player > Resolution And Presentation`.
+
 ## [1.1.1-preview.1] - 2021-07-14
 ### Added
 - Camera-based realtime reflection
@@ -14,6 +77,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Dialog pop-up when enabling SRP for Zappar package and Unity Universal Rendering Package is not imported in project.
 - Editor view for Zappar Face Mesh.
 
+### Known issues
+ - Missing UAR APIs error when taking development build on WebGl platform.
 
 ## [1.1.0-preview.2] - 2021-07-05
 ### Added

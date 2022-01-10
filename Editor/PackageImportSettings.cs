@@ -10,6 +10,11 @@ namespace Zappar.Editor
     {
         static PackageImportSettings()
         {
+            RefreshPackage();
+        }
+
+        public static void RefreshPackage()
+        {
             if (Application.isPlaying) return;
 
             //Copy WebGL templates from package to project

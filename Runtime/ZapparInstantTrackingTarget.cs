@@ -3,23 +3,49 @@ using UnityEngine;
 
 namespace Zappar
 {
-    public class ZapparInstantTrackingTarget : ZapparTrackingTarget, ZapparCamera.ICameraListener
+    public class ZapparInstantTrackingTarget : ZapparTrackingTarget, ICameraListener
     {
-        private IntPtr m_instantTracker = IntPtr.Zero;
-        private bool m_userHasPlaced = false;
-        private bool m_hasInitialised = false;
+        public IntPtr? InstantTracker = null;
+        [SerializeField, Tooltip("Offset for anchor in camera view before the placement")]
+        private Vector3 m_anchorOffsetFromCamera = new Vector3(0, 0, -3);
+        [SerializeField,Tooltip("Accept touch event to place the anchor for tracking")]
+        private bool m_placeOnTouch = true;
+        [Tooltip("Move the anchor along z-direction before the placement")]
+        public bool MoveAnchorOnZ = false;
+        [HideInInspector, SerializeField]
+        private ZapparCamera m_zCamera;
+        [HideInInspector, SerializeField]
+        private float m_minZDistance = 3.0f;
+        [HideInInspector, SerializeField]
+        private float m_maxZDistance = 40.0f;
+
+        private const float m_maxCameraRot = 40.0f;
+        
+        private bool m_hasInitialized = false;
         private bool m_isMirrored = false;
-
-        void Start()
+        private bool m_isPaused = false;
+        public bool UserHasPlaced { get; private set; }
+        
+        private void Start()
         {
-            ZapparCamera.Instance.RegisterCameraListener(this);
+            if (ZapparCamera.Instance != null)
+                ZapparCamera.Instance.RegisterCameraListener(this, true);
+
+            if (ZapparCamera.Instance.CameraSourceInitialized && !m_hasInitialized)
+            {
+                OnMirroringUpdate(ZapparCamera.Instance.MirrorCamera);
+                OnZapparCameraPaused(ZapparCamera.Instance.CameraSourcePaused);
+                OnZapparInitialized(ZapparCamera.Instance.GetPipeline);
+            }
         }
 
-        public void OnZapparInitialised(IntPtr pipeline)
+        public void OnZapparInitialized(IntPtr pipeline)
         {
-            m_instantTracker = Z.InstantWorldTrackerCreate(pipeline);
-            m_hasInitialised = true;
+            InstantTracker = Z.InstantWorldTrackerCreate(pipeline);
+            m_hasInitialized = true;
         }
+
+        public void OnZapparCameraPaused(bool pause) { m_isPaused = pause; }
 
         public void OnMirroringUpdate(bool mirrored)
         {
@@ -28,8 +54,8 @@ namespace Zappar
 
         void UpdateTargetPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetPose();
-            Matrix4x4 instantTrackerPose = Z.InstantWorldTrackerAnchorPose(m_instantTracker, cameraPose, m_isMirrored);
+            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 instantTrackerPose = Z.InstantWorldTrackerAnchorPose(InstantTracker.Value, cameraPose, m_isMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(instantTrackerPose);
 
             transform.localPosition = Z.GetPosition(targetPose);
@@ -37,37 +63,77 @@ namespace Zappar
             transform.localScale = Z.GetScale(targetPose);
         }
 
-        void Update()
+        private void Update()
         {
-            if (!m_hasInitialised)
+            if (!m_hasInitialized || InstantTracker==null || m_isPaused)
             {
                 return;
             }
 
-            if (!m_userHasPlaced)
+            if (!UserHasPlaced)
             {
-                Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(m_instantTracker, 0, 0, -5, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                if (MoveAnchorOnZ && m_zCamera != null)
+                {
+                    if (m_zCamera.AnchorOrigin != null && m_zCamera.transform.rotation.eulerAngles.x < m_maxCameraRot)
+                    {
+                        float dist = Mathf.Lerp(m_maxZDistance, m_minZDistance, m_zCamera.transform.rotation.eulerAngles.x / m_maxCameraRot);
+                        Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(InstantTracker.Value, m_anchorOffsetFromCamera.x, m_anchorOffsetFromCamera.y, -1f * dist, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                    }
+                    else if (m_zCamera.AnchorOrigin == null)
+                    {
+                        if (transform.rotation == Quaternion.identity)
+                        {
+                            float dist = m_maxZDistance;
+                            Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(InstantTracker.Value, m_anchorOffsetFromCamera.x, m_anchorOffsetFromCamera.y, -1f * dist, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                        }
+                        else if(transform.rotation.eulerAngles.x > 360f - m_maxCameraRot)
+                        {
+                            float dist = Mathf.Lerp(m_maxZDistance, m_minZDistance, (360f - transform.rotation.eulerAngles.x) / m_maxCameraRot);
+                            Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(InstantTracker.Value, m_anchorOffsetFromCamera.x, m_anchorOffsetFromCamera.y, -1f * dist, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                        }
+                    }
+                }
+                else if(!MoveAnchorOnZ)
+                {
+                    Z.InstantWorldTrackerAnchorPoseSetFromCameraOffset(InstantTracker.Value, m_anchorOffsetFromCamera.x, m_anchorOffsetFromCamera.y, m_anchorOffsetFromCamera.z, Z.InstantTrackerTransformOrientation.MINUS_Z_AWAY_FROM_USER);
+                }
             }
-
-            if (Input.touchCount > 0)
+            
+            if (m_placeOnTouch && Input.touchCount > 0)
             {
-                m_userHasPlaced = true;
+                UserHasPlaced = true;
             }
 
             UpdateTargetPose();
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
-            if (m_hasInitialised)
+            if (m_hasInitialized)
             {
-                if (m_instantTracker != IntPtr.Zero) Z.InstantWorldTrackerDestroy(m_instantTracker);
+                if (InstantTracker != null)
+                {
+                    Z.InstantWorldTrackerDestroy(InstantTracker.Value);
+                    InstantTracker = null;
+                }
             }
+            if (ZapparCamera.Instance != null)
+                ZapparCamera.Instance.RegisterCameraListener(this, false);
         }
 
         public override Matrix4x4 AnchorPoseCameraRelative()
         {
-            return Z.InstantWorldTrackerAnchorPoseCameraRelative(m_instantTracker, m_isMirrored);
+            return Z.InstantWorldTrackerAnchorPoseCameraRelative(InstantTracker.Value, m_isMirrored);
+        }
+    
+        public void PlaceTrackerAnchor()
+        {
+            UserHasPlaced = true;
+        }
+
+        public void ResetTrackerAnchor()
+        {
+            UserHasPlaced = false;
         }
     }
 }
