@@ -7,8 +7,8 @@ static id<MTLDevice> s_device = 0;
 static IUnityInterfaces* s_interface = 0;
 static zappar_pipeline_t s_pipeline = 0;
 
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload() {}
-extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API ZAPUnityPluginUnload() {}
+extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API ZAPUnityPluginLoad(IUnityInterfaces* unityInterfaces)
 {
     s_interface = unityInterfaces;
 
@@ -72,7 +72,7 @@ extern "C" void* zappar_pipeline_camera_frame_texture_dx11(zappar_pipeline_t o) 
 @implementation Zappar_iOSPluginController
 - (void)shouldAttachRenderDelegate
 {
-    UnityRegisterRenderingPluginV5(&UnityPluginLoad, &UnityPluginUnload);
+    UnityRegisterRenderingPluginV5(&ZAPUnityPluginLoad, &ZAPUnityPluginUnload);
     id rootViewController = UnityGetGLViewController();
     zappar_ios_uiviewcontroller_set( rootViewController );
 }

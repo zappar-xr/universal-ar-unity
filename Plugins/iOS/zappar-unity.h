@@ -6,8 +6,8 @@
 
 #define ZAPPAR_METAL_SUPPORT // Comment out this line if you _do not_ want to include support for Metal. 
 
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces);
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload();
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API ZAPUnityPluginLoad(IUnityInterfaces* unityInterfaces);
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API ZAPUnityPluginUnload();
 
 static void UNITY_INTERFACE_API OnNativeGLRenderEvent(int eventID);
 extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API zappar_upload_callback_native_gl();
