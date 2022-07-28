@@ -24,6 +24,14 @@ namespace Zappar
         }
 
         [SerializeField]
+        private bool m_excludeZPTFromBuild = false;
+        public bool ExcludeZPTFromBuild
+        {
+            get { return m_excludeZPTFromBuild; }
+            set { m_excludeZPTFromBuild = value; }
+        }
+
+        [SerializeField]
         private int m_concurrentFaceTrackerCount = 2;
         public int ConcurrentFaceTrackerCount
         {

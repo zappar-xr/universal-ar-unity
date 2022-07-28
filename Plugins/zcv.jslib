@@ -15,7 +15,7 @@ $zappar_support__postset: `
     _zappar_initialize = function() {
         if (typeof ZCV === 'undefined') {
             var scr = document.createElement("script");
-            scr.src="https://libs.zappar.com/zappar-cv/0.4.0-beta.8/zappar-cv.js";
+            scr.src="https://libs.zappar.com/zappar-cv/2.0.0-beta.8/zappar-cv.js";
             scr.addEventListener('load', function() {
                 zappar = ZCV.initialize();
                 hasInitialized = true;
@@ -279,12 +279,13 @@ $zappar_support__postset: `
 		var user_data_val = user_data;
 		var camera_to_device_transform_val = new Float32Array(16);
         camera_to_device_transform_val.set(HEAPF32.subarray(camera_to_device_transform/4, 16 + camera_to_device_transform / 4));
-		var camera_model_val = new Float32Array(16);
-        camera_model_val.set(HEAPF32.subarray(camera_model/4, 16 + camera_model / 4));
+		var camera_model_val = new Float32Array(6);
+        camera_model_val.set(HEAPF32.subarray(camera_model/4, 6 + camera_model / 4));
 		var user_facing_val = user_facing;
         var ret = zappar.pipeline_camera_frame_submit(o, data_val, width_val, height_val, user_data_val, camera_to_device_transform_val, camera_model_val, user_facing_val);
         return ret;
     };
+	
 	_zappar_pipeline_camera_frame_camera_attitude = function(o) {
         
         var ret = zappar.pipeline_camera_frame_camera_attitude(o);
@@ -415,6 +416,11 @@ $zappar_support__postset: `
         var ret = zappar.sequence_source_load_from_memory(o, data_val);
         return ret;
     };
+	_zappar_sequence_source_max_playback_fps_set = function(o, fps) {
+        var fps_val = fps;
+        var ret = zappar.sequence_source_max_playback_fps_set(o, fps_val);
+        return ret;
+    };
     
 	
     _zappar_image_tracker_create = function(pipeline) {
@@ -443,6 +449,31 @@ $zappar_support__postset: `
         var ret = zappar.image_tracker_target_count(o);
         return ret;
     };
+	_zappar_image_tracker_target_type = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_type(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_radius_top = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_radius_top(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_radius_bottom = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_radius_bottom(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_side_length = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_side_length(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_physical_scale_factor = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_physical_scale_factor(o, indx_val);
+        return ret;
+    };
 	
 	_zappar_image_tracker_target_preview_compressed_size = function(o, indx) {
         var indx_val = indx;
@@ -454,6 +485,58 @@ $zappar_support__postset: `
 	
 	
 	
+	_zappar_image_tracker_target_preview_mesh_indices = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_indices(o, indx_val);
+        var n = zappar.image_tracker_target_preview_mesh_indices_size(o, indx);
+        var buffer = _malloc(n * 2);
+        HEAPU16.set(ret, buffer / 2);
+        return buffer;
+    };
+	_zappar_image_tracker_target_preview_mesh_indices_size = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_indices_size(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_preview_mesh_vertices = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_vertices(o, indx_val);
+        var n = zappar.image_tracker_target_preview_mesh_vertices_size(o, indx);
+        var buffer = _malloc(n * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_image_tracker_target_preview_mesh_vertices_size = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_vertices_size(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_preview_mesh_normals = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_normals(o, indx_val);
+        var n = zappar.image_tracker_target_preview_mesh_normals_size(o, indx);
+        var buffer = _malloc(n * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_image_tracker_target_preview_mesh_normals_size = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_normals_size(o, indx_val);
+        return ret;
+    };
+	_zappar_image_tracker_target_preview_mesh_uvs = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_uvs(o, indx_val);
+        var n = zappar.image_tracker_target_preview_mesh_uvs_size(o, indx);
+        var buffer = _malloc(n * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_image_tracker_target_preview_mesh_uvs_size = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.image_tracker_target_preview_mesh_uvs_size(o, indx_val);
+        return ret;
+    };
 	_zappar_image_tracker_enabled = function(o) {
         
         var ret = zappar.image_tracker_enabled(o);
@@ -833,6 +916,14 @@ $zappar_support__postset: `
         HEAPF32.set(ret, buffer / 4);
         return buffer;
     };
+	_zappar_instant_world_tracker_anchor_pose_set_from_camera_offset_raw = function(o, x, y, z, orientation) {
+        var x_val = x;
+		var y_val = y;
+		var z_val = z;
+		var orientation_val = orientation;
+        var ret = zappar.instant_world_tracker_anchor_pose_set_from_camera_offset_raw(o, x_val, y_val, z_val, orientation_val);
+        return ret;
+    };
 	_zappar_instant_world_tracker_anchor_pose_set_from_camera_offset = function(o, x, y, z, orientation) {
         var x_val = x;
 		var y_val = y;
@@ -988,6 +1079,9 @@ $zappar_support__postset: `
     zappar_pipeline_camera_frame_submit: function() {},
     zappar_pipeline_camera_frame_submit__deps: ['$zappar_support'],
 	
+    zappar_pipeline_camera_frame_submit_raw_pointer: function() {},
+    zappar_pipeline_camera_frame_submit_raw_pointer__deps: ['$zappar_support'],
+	
     zappar_pipeline_camera_frame_camera_attitude: function() {},
     zappar_pipeline_camera_frame_camera_attitude__deps: ['$zappar_support'],
 	
@@ -1049,6 +1143,9 @@ $zappar_support__postset: `
 	
     zappar_sequence_source_load_from_memory: function() {},
     zappar_sequence_source_load_from_memory__deps: ['$zappar_support'],
+	
+    zappar_sequence_source_max_playback_fps_set: function() {},
+    zappar_sequence_source_max_playback_fps_set__deps: ['$zappar_support'],
 	zappar_image_tracker_create: function() {},
     zappar_image_tracker_create__deps: ['$zappar_support'],
     zappar_image_tracker_destroy: function() {},
@@ -1062,6 +1159,21 @@ $zappar_support__postset: `
 	
     zappar_image_tracker_target_count: function() {},
     zappar_image_tracker_target_count__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_type: function() {},
+    zappar_image_tracker_target_type__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_radius_top: function() {},
+    zappar_image_tracker_target_radius_top__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_radius_bottom: function() {},
+    zappar_image_tracker_target_radius_bottom__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_side_length: function() {},
+    zappar_image_tracker_target_side_length__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_physical_scale_factor: function() {},
+    zappar_image_tracker_target_physical_scale_factor__deps: ['$zappar_support'],
 	
     zappar_image_tracker_target_preview_compressed: function() {},
     zappar_image_tracker_target_preview_compressed__deps: ['$zappar_support'],
@@ -1083,6 +1195,30 @@ $zappar_support__postset: `
 	
     zappar_image_tracker_target_preview_rgba_height: function() {},
     zappar_image_tracker_target_preview_rgba_height__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_indices: function() {},
+    zappar_image_tracker_target_preview_mesh_indices__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_indices_size: function() {},
+    zappar_image_tracker_target_preview_mesh_indices_size__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_vertices: function() {},
+    zappar_image_tracker_target_preview_mesh_vertices__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_vertices_size: function() {},
+    zappar_image_tracker_target_preview_mesh_vertices_size__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_normals: function() {},
+    zappar_image_tracker_target_preview_mesh_normals__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_normals_size: function() {},
+    zappar_image_tracker_target_preview_mesh_normals_size__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_uvs: function() {},
+    zappar_image_tracker_target_preview_mesh_uvs__deps: ['$zappar_support'],
+	
+    zappar_image_tracker_target_preview_mesh_uvs_size: function() {},
+    zappar_image_tracker_target_preview_mesh_uvs_size__deps: ['$zappar_support'],
 	
     zappar_image_tracker_enabled: function() {},
     zappar_image_tracker_enabled__deps: ['$zappar_support'],
@@ -1250,6 +1386,9 @@ $zappar_support__postset: `
 	
     zappar_instant_world_tracker_anchor_pose: function() {},
     zappar_instant_world_tracker_anchor_pose__deps: ['$zappar_support'],
+	
+    zappar_instant_world_tracker_anchor_pose_set_from_camera_offset_raw: function() {},
+    zappar_instant_world_tracker_anchor_pose_set_from_camera_offset_raw__deps: ['$zappar_support'],
 	
     zappar_instant_world_tracker_anchor_pose_set_from_camera_offset: function() {},
     zappar_instant_world_tracker_anchor_pose_set_from_camera_offset__deps: ['$zappar_support'],

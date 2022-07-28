@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
@@ -30,6 +31,20 @@ namespace Zappar.Editor
             {
                 Debug.LogError("UAR settings not found! Invalid html template!!");
                 return;
+            }
+
+            if(settings.ExcludeZPTFromBuild)
+            {
+                string zpt_dir = Path.Combine(targetPath, "StreamingAssets");
+                DirectoryInfo di = new DirectoryInfo(zpt_dir);
+                foreach(var file in di.EnumerateFiles())
+                {
+                    if (file.FullName.EndsWith(".zpt"))
+                    {
+                        Debug.Log("Removed " + file.FullName);
+                        file.Delete();
+                    }
+                }
             }
 
             string indexFile = Path.Combine(targetPath, "index.html");

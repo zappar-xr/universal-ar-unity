@@ -95,7 +95,7 @@ namespace Zappar
 
         private void UpdateAnchorPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 cameraPose = ZapparCamera.Instance.CameraPose;
             Matrix4x4 facePose = Z.FaceTrackerAnchorPose(FaceTrackingTarget.FaceTrackerPipeline.Value, AnchorId, cameraPose, FaceTrackingTarget.IsMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(facePose);
 

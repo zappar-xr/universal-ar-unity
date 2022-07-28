@@ -73,6 +73,17 @@ public class Z
         UnityLog = 2
     }
 
+    public enum FramePixelFormat : uint {
+        FRAME_PIXEL_FORMAT_I420 = 0,
+        FRAME_PIXEL_FORMAT_I420A = 1,
+        FRAME_PIXEL_FORMAT_I422 = 2,
+        FRAME_PIXEL_FORMAT_I444 = 3,
+        FRAME_PIXEL_FORMAT_NV12 = 4,
+        FRAME_PIXEL_FORMAT_RGBA = 5,
+        FRAME_PIXEL_FORMAT_BGRA = 6,
+        FRAME_PIXEL_FORMAT_Y = 7
+    }
+
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -96,6 +107,8 @@ public class Z
     public static extern int TrainImageCompressed(ref FileData compressed, ref FileData zpt, ref FileData preview, int preview_is_jpeg);
     [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
     public static extern int TrainImageCompressedWithMax(ref FileData compressed, ref FileData zpt, ref FileData preview, int preview_is_jpeg, int max_width, int max_height);
+    [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int TrainImageCompressedWithMaxCurved(ref FileData compressed, ref FileData zpt, ref FileData preview, int preview_is_jpeg, int max_width, int max_height, float top_radius, float bottom_radius, float side_length, float physical_scale_factor);
     [DllImport(Config.ImageTrainPlugin, CallingConvention = CallingConvention.Cdecl)]
     public static extern void TrainImageFreeFileData(ref FileData d);
     
@@ -219,6 +232,7 @@ public class Z
     private static extern int zappar_pipeline_camera_frame_user_data(IntPtr o);
     [DllImport(Config.PluginName)]
     private static extern void zappar_pipeline_camera_frame_submit(IntPtr o, byte[] data, int size, int width, int height, int user_data, float[] camera_to_device_transform, float[] camera_model, int user_facing);
+
     [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_pipeline_camera_frame_camera_attitude(IntPtr o);
     [DllImport(Config.PluginName)]
@@ -269,6 +283,8 @@ public class Z
     private static extern void zappar_sequence_source_pause(IntPtr o);
     [DllImport(Config.PluginName)]
     private static extern void zappar_sequence_source_load_from_memory(IntPtr o, byte[] data, int size);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_sequence_source_max_playback_fps_set(IntPtr o, float fps);
     
 
         [DllImport(Config.PluginName)]
@@ -283,6 +299,16 @@ public class Z
     [DllImport(Config.PluginName)]
     private static extern int zappar_image_tracker_target_count(IntPtr o);
     [DllImport(Config.PluginName)]
+    private static extern uint zappar_image_tracker_target_type(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern float zappar_image_tracker_target_radius_top(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern float zappar_image_tracker_target_radius_bottom(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern float zappar_image_tracker_target_side_length(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern float zappar_image_tracker_target_physical_scale_factor(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_image_tracker_target_preview_compressed(IntPtr o, int indx);
     [DllImport(Config.PluginName)]
     private static extern int zappar_image_tracker_target_preview_compressed_size(IntPtr o, int indx);
@@ -296,6 +322,22 @@ public class Z
     private static extern int zappar_image_tracker_target_preview_rgba_width(IntPtr o, int indx);
     [DllImport(Config.PluginName)]
     private static extern int zappar_image_tracker_target_preview_rgba_height(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_image_tracker_target_preview_mesh_indices(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern int zappar_image_tracker_target_preview_mesh_indices_size(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_image_tracker_target_preview_mesh_vertices(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern int zappar_image_tracker_target_preview_mesh_vertices_size(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_image_tracker_target_preview_mesh_normals(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern int zappar_image_tracker_target_preview_mesh_normals_size(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_image_tracker_target_preview_mesh_uvs(IntPtr o, int indx);
+    [DllImport(Config.PluginName)]
+    private static extern int zappar_image_tracker_target_preview_mesh_uvs_size(IntPtr o, int indx);
     [DllImport(Config.PluginName)]
     private static extern int zappar_image_tracker_enabled(IntPtr o);
     [DllImport(Config.PluginName)]
@@ -429,6 +471,8 @@ public class Z
     private static extern IntPtr zappar_instant_world_tracker_anchor_pose_camera_relative(IntPtr o, int mirror);
     [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_instant_world_tracker_anchor_pose(IntPtr o, float[] camera_pose, int mirror);
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_instant_world_tracker_anchor_pose_set_from_camera_offset_raw(IntPtr o, float x, float y, float z, uint orientation);
     [DllImport(Config.PluginName)]
     private static extern void zappar_instant_world_tracker_anchor_pose_set_from_camera_offset(IntPtr o, float x, float y, float z, uint orientation);
     
@@ -950,7 +994,7 @@ public class Z
         int ret = zappar_pipeline_camera_frame_user_data(o);
         return ret;
     }
-	public static void PipelineCameraFrameSubmit(IntPtr o, byte[] data, int width, int height, int user_data, Matrix4x4 camera_to_device_transform, Matrix4x4 camera_model, bool user_facing) {
+	public static void PipelineCameraFrameSubmit(IntPtr o, byte[] data, int width, int height, int user_data, Matrix4x4 camera_to_device_transform, float[] camera_model, bool user_facing) {
         
 	
 	
@@ -960,14 +1004,12 @@ public class Z
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
                 arg_camera_to_device_transform[i * 4 + k] = camera_to_device_transform[k, i];
-	float[] arg_camera_model = new float[16];
-        for (int i = 0; i < 4; i++)
-            for (int k = 0; k < 4; k++)
-                arg_camera_model[i * 4 + k] = camera_model[k, i];
 	
-        zappar_pipeline_camera_frame_submit(o, data, data.Length, width, height, user_data, arg_camera_to_device_transform, arg_camera_model, user_facing ? 1 : 0);
+	
+        zappar_pipeline_camera_frame_submit(o, data, data.Length, width, height, user_data, arg_camera_to_device_transform, camera_model, user_facing ? 1 : 0);
         
     }
+	
 	public static Matrix4x4 PipelineCameraFrameCameraAttitude(IntPtr o) {
         
         IntPtr ret = zappar_pipeline_camera_frame_camera_attitude(o);
@@ -1092,6 +1134,12 @@ public class Z
         zappar_sequence_source_load_from_memory(o, data, data.Length);
         
     }
+	public static void SequenceSourceMaxPlaybackFpsSet(IntPtr o, float fps) {
+        
+	
+        zappar_sequence_source_max_playback_fps_set(o, fps);
+        
+    }
 	public static void ImageTrackerTargetLoadFromMemory(IntPtr o, byte[] data) {
         
 	
@@ -1106,6 +1154,36 @@ public class Z
 	public static int ImageTrackerTargetCount(IntPtr o) {
         
         int ret = zappar_image_tracker_target_count(o);
+        return ret;
+    }
+	public static uint ImageTrackerTargetType(IntPtr o, int indx) {
+        
+	
+        uint ret = zappar_image_tracker_target_type(o, indx);
+        return ret;
+    }
+	public static float ImageTrackerTargetRadiusTop(IntPtr o, int indx) {
+        
+	
+        float ret = zappar_image_tracker_target_radius_top(o, indx);
+        return ret;
+    }
+	public static float ImageTrackerTargetRadiusBottom(IntPtr o, int indx) {
+        
+	
+        float ret = zappar_image_tracker_target_radius_bottom(o, indx);
+        return ret;
+    }
+	public static float ImageTrackerTargetSideLength(IntPtr o, int indx) {
+        
+	
+        float ret = zappar_image_tracker_target_side_length(o, indx);
+        return ret;
+    }
+	public static float ImageTrackerTargetPhysicalScaleFactor(IntPtr o, int indx) {
+        
+	
+        float ret = zappar_image_tracker_target_physical_scale_factor(o, indx);
         return ret;
     }
 	public static byte[] ImageTrackerTargetPreviewCompressed(IntPtr o, int indx) {
@@ -1154,6 +1232,72 @@ public class Z
         
 	
         int ret = zappar_image_tracker_target_preview_rgba_height(o, indx);
+        return ret;
+    }
+	public static int[] ImageTrackerTargetPreviewMeshIndices(IntPtr o, int indx) {
+        
+	
+        IntPtr ret = zappar_image_tracker_target_preview_mesh_indices(o, indx);
+        int numIndices = ImageTrackerTargetPreviewMeshIndicesSize(o, indx);  
+        int numBytes = numIndices*2;              
+        byte[] src = new byte[numBytes];
+        int[] dst = new int[numIndices];
+        Marshal.Copy(ret, src, 0, numBytes);
+        for (int n = 0; n < numBytes; n+=2) 
+        {          
+            dst[n/2] = (int)BitConverter.ToUInt16(src, n);   
+        }
+        return dst;
+    }
+	public static int ImageTrackerTargetPreviewMeshIndicesSize(IntPtr o, int indx) {
+        
+	
+        int ret = zappar_image_tracker_target_preview_mesh_indices_size(o, indx);
+        return ret;
+    }
+	public static float[] ImageTrackerTargetPreviewMeshVertices(IntPtr o, int indx) {
+        
+	
+        IntPtr ret = zappar_image_tracker_target_preview_mesh_vertices(o, indx);
+        int N = ImageTrackerTargetPreviewMeshVerticesSize(o, indx);
+        float[] retFloats = new float[N];
+        Marshal.Copy(ret, retFloats, 0, N);
+        return retFloats;
+    }
+	public static int ImageTrackerTargetPreviewMeshVerticesSize(IntPtr o, int indx) {
+        
+	
+        int ret = zappar_image_tracker_target_preview_mesh_vertices_size(o, indx);
+        return ret;
+    }
+	public static float[] ImageTrackerTargetPreviewMeshNormals(IntPtr o, int indx) {
+        
+	
+        IntPtr ret = zappar_image_tracker_target_preview_mesh_normals(o, indx);
+        int N = ImageTrackerTargetPreviewMeshNormalsSize(o, indx);
+        float[] retFloats = new float[N];
+        Marshal.Copy(ret, retFloats, 0, N);
+        return retFloats;
+    }
+	public static int ImageTrackerTargetPreviewMeshNormalsSize(IntPtr o, int indx) {
+        
+	
+        int ret = zappar_image_tracker_target_preview_mesh_normals_size(o, indx);
+        return ret;
+    }
+	public static float[] ImageTrackerTargetPreviewMeshUvs(IntPtr o, int indx) {
+        
+	
+        IntPtr ret = zappar_image_tracker_target_preview_mesh_uvs(o, indx);
+        int N = ImageTrackerTargetPreviewMeshUvsSize(o, indx);
+        float[] retFloats = new float[N];
+        Marshal.Copy(ret, retFloats, 0, N);
+        return retFloats;
+    }
+	public static int ImageTrackerTargetPreviewMeshUvsSize(IntPtr o, int indx) {
+        
+	
+        int ret = zappar_image_tracker_target_preview_mesh_uvs_size(o, indx);
         return ret;
     }
 	public static bool ImageTrackerEnabled(IntPtr o) {
@@ -1382,10 +1526,8 @@ public class Z
         IntPtr ret = zappar_face_mesh_indices(o);
         int numIndices = FaceMeshIndicesSize(o);  
         int numBytes = numIndices*2;              
-
         byte[] src = new byte[numBytes];
         int[] dst = new int[numIndices];
-
         Marshal.Copy(ret, src, 0, numBytes);
         for (int n = 0; n < numBytes; n+=2) 
         {          
@@ -1539,6 +1681,15 @@ public class Z
             for (int k = 0; k < 4; k++)
                 retMatrix[k, i] = retFloats[i * 4 + k];
         return retMatrix;
+    }
+	public static void InstantWorldTrackerAnchorPoseSetFromCameraOffsetRaw(IntPtr o, float x, float y, float z, InstantTrackerTransformOrientation orientation) {
+        
+	
+	
+	
+	
+        zappar_instant_world_tracker_anchor_pose_set_from_camera_offset_raw(o, x, y, z, (uint)orientation);
+        
     }
 	public static void InstantWorldTrackerAnchorPoseSetFromCameraOffset(IntPtr o, float x, float y, float z, InstantTrackerTransformOrientation orientation) {
         

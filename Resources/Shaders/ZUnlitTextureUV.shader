@@ -7,11 +7,13 @@ Shader "Zappar/UnlitTextureUV"
         _FlipTexX ("Flip U", float) = 0
         [Toggle(FlipTexV)]
         _FlipTexY ("Flip V", float) = 0
+        [Enum(Off,0,Front,1,Back,2)] _Culling("Cull", Int) = 2
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
+        Cull[_Culling]
 
         Pass
         {
