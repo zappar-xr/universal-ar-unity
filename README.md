@@ -15,6 +15,8 @@ You may also be interested in:
 
 The [ZapWorks CLI](https://www.npmjs.com/package/@zappar/zapworks-cli) is a set of command line utilities that will be useful to you during development.
 
+This repo is not open for public contributions. Please report an [issue](https://github.com/zappar-xr/universal-ar-unity/issues) if you have any feedback or queries, or head over to our [forum](https://forum.zap.works/c/universal-ar/unity/) for discussions with the community.
+
 # Table of Contents
 
   * [Importing UAR package into Unity](#importing-uar-package-into-unity)

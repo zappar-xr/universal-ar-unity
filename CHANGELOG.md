@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Zappar Instant Tracking to use new world tracking implementation.
 - Reduced the Zappar Camera near clipping plane to 0.01 from 0.3.
 
+### Known issues
+- No support for Unity silicon editor.
+
 
 ## [3.0.1] - 2022-01-04
 ### Fixed
