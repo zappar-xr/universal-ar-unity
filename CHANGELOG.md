@@ -4,9 +4,28 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2022-07-28
+### Added
+- Cylindrical and conical image training and tracking target type.
+- New Zappar camera type of gyro (3DoF tracking) which only updates the virtual camera's attitude and optional backdrop of camera feed.
+- New menu options to add additional zappar packages for webgl - `Save and Share` and `Video Recorder`.
+- Editor option to exclude *.zpt files from WebGL build to minimize the build size.
+- Culling property for `Zappar/UnlitTextureUV` shader, which allows off/front/back culling.
+
+### Changed
+- Zappar Instant Tracking to use new world tracking implementation.
+- Reduced the Zappar Camera near clipping plane to 0.01 from 0.3.
+
+### Known issues
+- No support for Unity silicon editor.
+
+
 ## [3.0.1] - 2022-01-04
 ### Fixed
 - ZapparFaceMesh is not visible when kept disabled on start. This was due to delay in receiving mesh data (verts, tris, etc.) immediately after initialization.
+
+### Known issues
+- Dark camera background texture on native iOS and Mac with Gamma color space. [Track Issue](https://github.com/zappar-xr/universal-ar-unity/issues/11)
 
 ## [3.0.0] - 2021-12-20
 ### Added

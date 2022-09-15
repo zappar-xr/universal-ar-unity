@@ -119,7 +119,7 @@ namespace Zappar.Obsolete
 
         void UpdateTargetPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 cameraPose = ZapparCamera.Instance.CameraPose;
             Matrix4x4 facePose = Z.FaceTrackerAnchorPose(ZapparFaceTrackingManager.FaceTrackerPipeline.Value, m_faceNumber, cameraPose, m_isMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(facePose);
 

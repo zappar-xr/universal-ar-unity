@@ -177,7 +177,7 @@ namespace Zappar.Editor
                 {
 
                     s_importRequest = UnityEditor.PackageManager.Client.Add(packageId);
-                    Debug.Log("Reimporting: " + packageId);
+                    Debug.Log("[UAR]: Reimporting: " + packageId);
                     EditorApplication.update += PackageProgress;
                 }
                 else
@@ -206,6 +206,13 @@ namespace Zappar.Editor
         public static void ZapparCreateCamera()
         {
             GameObject go = ZAssistant.GetZapparCamera(false);
+            UpdateZapparCamera(go);
+        }
+
+        [MenuItem("Zappar/Camera/Gyro Camera (3 DoF tracking)", false, 30)]
+        public static void ZapparCreateGyroCamera()
+        {
+            GameObject go = ZAssistant.GetZapparGyroCamera();
             UpdateZapparCamera(go);
         }
 
@@ -281,6 +288,94 @@ namespace Zappar.Editor
 
         #endregion
 
+        #region AdditionalPackages
+        [MenuItem("Zappar/Additional Git Packages/Import WebGL Save And Share", false, 90)]
+        public static void ZapparAddSNSPackage()
+        {
+#if UNITY_2021_1_OR_NEWER
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = AddSNSPackage;
+            EditorApplication.update += PackageProgress;
+#else
+            EditorUtility.DisplayDialog("Zappar Notification", "The `WebGL Save and Share` package is only supported on Unity 2021.x LTS and above only!", "OK");
+#endif
+        }
+
+        [MenuItem("Zappar/Additional Git Packages/Import WebGL Video Recorder", false, 91)]
+        public static void ZapparAddVideoRecorderPackage()
+        {
+#if UNITY_2021_1_OR_NEWER
+            s_packageListRequest = Client.List(true, true);
+            OnPackageListUpdated = AddVideoRecorderPackage;
+            EditorApplication.update += PackageProgress;
+#else
+            EditorUtility.DisplayDialog("Zappar Notification", "The `WebGL Video Recording` package is only supported on Unity 2021.x LTS and above only!", "OK");
+#endif
+        }
+
+        private static void AddSNSPackage(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                string packageId = "";
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.zappar.sns"))
+                    { avail = true; packageId = pack.packageId; break; }
+                }
+
+                if (avail)
+                {
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(packageId);
+                    Debug.Log("[UAR]: Reimporting: " + packageId);
+                }
+                else
+                {
+                    const string np = "https://github.com/zappar-xr/unity-webgl-sns.git";
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(np);
+                    Debug.Log("[UAR]: Adding new package: " + np);
+                }
+                EditorApplication.update += PackageProgress;
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for additional package. Error: " + request.Error.message);
+            }
+        }
+
+        private static void AddVideoRecorderPackage(ListRequest request)
+        {
+            if (request.Status == StatusCode.Success)
+            {
+                bool avail = false;
+                string packageId = "";
+                foreach (var pack in request.Result)
+                {
+                    if (pack.packageId.ToLower().Contains("com.zappar.videorecorder"))
+                    { avail = true; packageId = pack.packageId; break; }
+                }
+
+                if (avail)
+                {
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(packageId);
+                    Debug.Log("[UAR]: Reimporting: " + packageId);
+                }
+                else
+                {
+                    const string np = "https://github.com/zappar-xr/unity-webgl-video-recorder.git";
+                    s_importRequest = UnityEditor.PackageManager.Client.Add(np);
+                    Debug.Log("[UAR]: Adding new package: " + np);
+                }
+                EditorApplication.update += PackageProgress;
+            }
+            else if (request.Status >= StatusCode.Failure)
+            {
+                Debug.LogError("Failed to check for additional package. Error: " + request.Error.message);
+            }
+        }
+#endregion
+
         private static void UnityRenderPipelineCheck(ListRequest request)
         {
             if (request.Status == StatusCode.Success)
@@ -317,17 +412,23 @@ namespace Zappar.Editor
             {
                 if (s_importRequest.Status == StatusCode.Failure)
                 {
-                    Debug.Log("Import ("+ s_importRequest.Result?.packageId + ") failed: " + s_importRequest.Error.message);
+                    Debug.Log("[UAR]: Import ("+ s_importRequest.Result?.packageId + ") failed: " + s_importRequest.Error.message);
                     EditorApplication.update -= PackageProgress;
                     s_importRequest = null;
+                    return;
                 }
 
                 if (s_importRequest.Status == StatusCode.Success)
                 {
-                    Debug.Log("Finished importing: " + s_importRequest.Result?.packageId);
+                    Debug.Log("[UAR]: Finished importing: " + s_importRequest.Result?.packageId);
                     EditorApplication.update -= PackageProgress;
-                    s_importRequest = null;
-                    PackageImportSettings.RefreshPackage();
+                    if(EditorUtility.DisplayDialog("Zappar Notification", 
+                        "Package: " + s_importRequest.Result?.packageId + " added successfully.\nPlease check the Readme.md or import samples from package manager window for user guide.",
+                        "OK"))
+                    {
+                        PackageImportSettings.RefreshPackage();
+                        s_importRequest = null;
+                    }
                 }
             }
         }

@@ -1,5 +1,5 @@
-<!-- Adapted from https://github.com/greggman/better-unity-webgl-template/blob/master/Assets/WebGLTemplates/BetterTemplate/index.html -->
-<!-- 26 June 2020 -->
+<!-- Zappar WebGL template for Unity 2019 and earlier versions -->
+<!-- NFYNT -->
 <!DOCTYPE html>
 <html lang="en-us">
 
@@ -75,7 +75,7 @@
 </head>
 
 <body>
-    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.12/zappar-cv.js"></script>
+    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/2.0.0/zappar-cv.js"></script>
 
     <div id="gameContainer"></div>
     <div id="loader">
@@ -106,6 +106,7 @@
             if (!gameInstance.Module) {
                 return;
             }
+            window.uarGameInstance = gameInstance;
             if (!gameInstance.progress) {
                 const progress = document.querySelector("#loader .progress");
                 progress.style.display = "block";
@@ -115,7 +116,6 @@
             if (progress === 1 && !gameInstance.removeTimeout) {
                 gameInstance.removeTimeout = setTimeout(function () {
                     loader.style.display = "none";
-                    //WaitForZCVLoad();
                 }, 0); // optionally set a delay in here.
             }
         }

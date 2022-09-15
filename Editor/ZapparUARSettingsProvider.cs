@@ -8,7 +8,8 @@ namespace Zappar.Editor
     {
         class Styles
         {
-            public static GUIContent ImageTargetPreview = new GUIContent("Enable Image Tracker Preview", "Add image preview of target in editor");
+            public static GUIContent ImageTargetPreview = new GUIContent("Enable Image Tracker Preview", "Add preview for image tracking target in editor");
+            public static GUIContent ExcludeZPT = new GUIContent("Exclude zpt from build", "Remove ZPT files from build to minimize size. Recommended for builds not using image tracking type.");
             public static GUIContent ConcurrentFaceTracker = new GUIContent("Concurrent Face Trackers", "Number of faces to track at the same time");
             public static GUIContent RequestPermissionUI = new GUIContent("Permission UI (WebGL)", "Request device permissions with additional UI on WebGL build");
             public static GUIContent RealtimeReflections = new GUIContent("Enable Realtime Reflection", "Use ZCV camera source for realtime reflection");
@@ -20,7 +21,9 @@ namespace Zappar.Editor
 
         struct Constants
         {
+            public const string PackageVersionProp = "m_packageVersion";
             public const string ImagePreviewProp = "m_enableImageTargetPreview";
+            public const string ExcludeZPTProp = "m_excludeZPTFromBuild";
             public const string FaceTrackerProp = "m_concurrentFaceTrackerCount";
             public const string PermissionRequestProp = "m_permissionRequestUI";
             public const string RealtimeReflectionProp = "m_enableRealtimeReflections";
@@ -32,9 +35,7 @@ namespace Zappar.Editor
         {
             settings.Update();
 
-            PackageInfo info = PackageInfo.FindForAssetPath("Packages/com.zappar.uar/package.json");
-
-            EditorGUILayout.HelpBox("Version: " + info.version,MessageType.Info);
+            EditorGUILayout.HelpBox("Version: " + settings.FindProperty(Constants.PackageVersionProp).stringValue, MessageType.Info);
 
             EditorGUILayout.Space(10);
             GUILayout.Label("<color=#CCCCCC>Runtime Settings</color>", Styles.Heading1);
@@ -76,9 +77,19 @@ namespace Zappar.Editor
             if (!settings.FindProperty(Constants.ImagePreviewProp).boolValue)
             {
                 Rect rect = EditorGUILayout.BeginVertical();
-                EditorGUILayout.TextArea("<color=white>Note: Already added preview images would still be present unless removed manually</color>", new GUIStyle() { fontSize = (int)EditorGUIUtility.singleLineHeight/2, wordWrap = true, richText = true });
+                EditorGUILayout.TextArea("<color=white>    <b>Note:</b> Already added preview images would still be present unless removed manually</color>", new GUIStyle() { fontSize = (int)EditorGUIUtility.singleLineHeight/2, wordWrap = true, richText = true });
+                EditorGUILayout.EndVertical();
+                GUI.Box(rect, GUIContent.none); 
+                EditorGUILayout.Space(2);
+            }
+            EditorGUILayout.PropertyField(settings.FindProperty(Constants.ExcludeZPTProp), Styles.ExcludeZPT);
+            if(settings.FindProperty(Constants.ExcludeZPTProp).boolValue)
+            {
+                Rect rect = EditorGUILayout.BeginVertical();
+                EditorGUILayout.TextArea("<color=white>    Don't use this if you're using any <b>image tracking</b> targets.</color>", new GUIStyle() { fontSize = (int)EditorGUIUtility.singleLineHeight / 2, wordWrap = true, richText = true });
                 EditorGUILayout.EndVertical();
                 GUI.Box(rect, GUIContent.none);
+                EditorGUILayout.Space(2);
             }
             EditorGUILayout.Space(2);
             EditorGUILayout.PropertyField(settings.FindProperty(Constants.DebugModeProp), Styles.DebugMode);
@@ -125,23 +136,27 @@ namespace Zappar.Editor
 
         public static ZapparUARSettings GetOrCreateSettings()
         {
+            PackageInfo info = PackageInfo.FindForAssetPath("Packages/com.zappar.uar/package.json");
             var settings = AssetDatabase.LoadAssetAtPath<ZapparUARSettings>(ZapparUARSettings.MySettingsPathInPackage);
-            if (settings == null)
+            if (settings == null || settings.PackageVersion != info.version)
             {
                 if (!Directory.Exists(Path.GetDirectoryName(ZapparUARSettings.MySettingsPathInPackage)))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(ZapparUARSettings.MySettingsPathInPackage));
                 }
                 settings = ScriptableObject.CreateInstance<ZapparUARSettings>();
+                settings.PackageVersion = info.version;
                 settings.ImageTargetPreviewEnabled = true;
                 settings.ConcurrentFaceTrackerCount = 2;
                 settings.PermissionRequestUI = true;
                 settings.EnableRealtimeReflections = false;
+                settings.ExcludeZPTFromBuild = false;
                 settings.DebugMode = Z.DebugMode.UnityLog;
                 settings.LogLevel = Z.LogLevel.WARNING;
                 AssetDatabase.CreateAsset(settings, ZapparUARSettings.MySettingsPathInPackage);
                 AssetDatabase.SaveAssets();
             }
+
             return settings;
         }
 

@@ -54,7 +54,7 @@ namespace Zappar
 
         void UpdateTargetPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 cameraPose = ZapparCamera.Instance.CameraPose;
             Matrix4x4 instantTrackerPose = Z.InstantWorldTrackerAnchorPose(InstantTracker.Value, cameraPose, m_isMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(instantTrackerPose);
 

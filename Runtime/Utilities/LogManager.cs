@@ -5,16 +5,16 @@ namespace Zappar
     public class LogManager : SingletonMono<LogManager>
     {
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN
-        private Z.DebugMode DebugMode = Z.DebugMode.UnityLog;
-        private Z.LogLevel LogLevel = Z.LogLevel.WARNING;
+        private Z.DebugMode m_debugMode = Z.DebugMode.UnityLog;
+        private Z.LogLevel m_logLevel = Z.LogLevel.WARNING;
 
 
-        public static event Z.DebugLogDelegate onDebugLog = OnDebugLog;
-        public static event Z.DebugLogDelegate onDebugErr = OnDebugErr;
+        public static event Z.DebugLogDelegate OnDebugLog = DebugLog;
+        public static event Z.DebugLogDelegate OnDebugErr = DebugErr;
         [AOT.MonoPInvokeCallback(typeof(Z.DebugLogDelegate))]
-        private static void OnDebugLog(string msg) { Debug.Log(msg); }
+        private static void DebugLog(string msg) { Debug.Log(msg); }
         [AOT.MonoPInvokeCallback(typeof(Z.DebugLogDelegate))]
-        private static void OnDebugErr(string msg) { Debug.LogError(msg); }
+        private static void DebugErr(string msg) { Debug.LogError(msg); }
 
 
         private void Awake()
@@ -26,27 +26,27 @@ namespace Zappar
         {
             DontDestroyOnLoad(this);
 
-            var settings = Resources.FindObjectsOfTypeAll<ZapparUARSettings>();
-            if (settings != null && settings.Length>0)
+            var settings = ZSettings.UARSettings;
+            if (settings != null)
             {
-                DebugMode = settings[0].DebugMode;
-                LogLevel = settings[0].LogLevel;
+                m_debugMode = settings.DebugMode;
+                m_logLevel = settings.LogLevel;
             }
             else
             {
                 Debug.LogError("ZapparUARSettings not found");
             }
-            Z.SetDebugMode(DebugMode, LogLevel);
+            Z.SetDebugMode(m_debugMode, m_logLevel);
 
         }
 
-        void OnEnable()
+        private void OnEnable()
         {
-            Z.SetLogFunc(onDebugLog);
-            Z.SetErrorFunc(onDebugErr);
+            Z.SetLogFunc(OnDebugLog);
+            Z.SetErrorFunc(OnDebugErr);
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             Z.SetLogFunc(null);
             Z.SetErrorFunc(null);

@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 125ea67139dd3d74bac38e53a61e91fb, type: 3}
   m_Name: ZapparUARSettings
   m_EditorClassIdentifier: 
+  m_packageVersion: 3.1.0-preview.1
   m_enableImageTargetPreview: 1
+  m_excludeZPTFromBuild: 0
   m_concurrentFaceTrackerCount: 2
   m_permissionRequestUI: 1
   m_enableRealtimeReflections: 0

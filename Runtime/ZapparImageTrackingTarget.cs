@@ -9,7 +9,7 @@ namespace Zappar
         public enum PlaneOrientation
         {
             Flat,
-            Upright
+            Vertical
         }
 
         public IntPtr? ImageTrackerPtr { get; private set; } = null;
@@ -25,7 +25,7 @@ namespace Zappar
         public PlaneOrientation Orientation = PlaneOrientation.Flat;
 
         [HideInInspector]
-        public GameObject PreviewImagePlane = null;
+        public GameObject PreviewImageObject = null;
 
         public UnityEvent OnSeenEvent;
         public UnityEvent OnNotSeenEvent;
@@ -68,7 +68,7 @@ namespace Zappar
 
         void UpdateTargetPose()
         {
-            Matrix4x4 cameraPose = ZapparCamera.Instance.GetCameraPose;
+            Matrix4x4 cameraPose = ZapparCamera.Instance.CameraPose;
             Matrix4x4 imagePose = Z.ImageTrackerAnchorPose(ImageTrackerPtr.Value, TrackIndx, cameraPose, m_isMirrored);
             Matrix4x4 targetPose = Z.ConvertToUnityPose(imagePose);
             transform.localPosition = Z.GetPosition(targetPose);

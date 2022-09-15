@@ -8,11 +8,27 @@ namespace Zappar
         public const string MySettingsPathInPackage = "Packages/com.zappar.uar/Resources/" + MySettingsPath;
 
         [SerializeField]
+        private string m_packageVersion = "na";
+        public string PackageVersion
+        {
+            get { return m_packageVersion; }
+            set { m_packageVersion = value; }
+        }
+
+        [SerializeField]
         private bool m_enableImageTargetPreview = false;
         public bool ImageTargetPreviewEnabled
         {
             get { return m_enableImageTargetPreview; }
             set { m_enableImageTargetPreview = value; }
+        }
+
+        [SerializeField]
+        private bool m_excludeZPTFromBuild = false;
+        public bool ExcludeZPTFromBuild
+        {
+            get { return m_excludeZPTFromBuild; }
+            set { m_excludeZPTFromBuild = value; }
         }
 
         [SerializeField]

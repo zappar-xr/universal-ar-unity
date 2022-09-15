@@ -151,6 +151,7 @@ namespace Zappar.Editor
             child.GetComponent<Camera>().cullingMask = 0;
             child.tag = "MainCamera";
             child.transform.SetParent(go.transform);
+            go.GetComponent<Camera>().nearClipPlane = 0.01f;
             go.GetComponent<Camera>().clearFlags = CameraClearFlags.Nothing;
             go.GetComponent<Camera>().depth = 1;
             if(userFacing)
@@ -163,6 +164,12 @@ namespace Zappar.Editor
                 go.GetComponent<ZapparCamera>().UseFrontFacingCamera = false;
                 go.GetComponent<ZapparCamera>().MirrorCamera = false;
             }
+            return go;
+        }
+
+        public static GameObject GetZapparGyroCamera()
+        {
+            GameObject go = new GameObject("Zappar Gyro Camera", new[] { typeof(Camera), typeof(ZapparGyroCamera) });
             return go;
         }
 

@@ -6,18 +6,6 @@ namespace Zappar
     {
         public static bool PermissionGrantedAll { get; private set; }
 
-        private static ZapparUARSettings s_settings;
-
-        private static void GetUARSettings()
-        {
-            if(s_settings==null)
-            {
-                string path = ZapparUARSettings.MySettingsPath;
-                s_settings = Resources.Load<ZapparUARSettings>(path.Substring(0, path.IndexOf(".asset")));
-                //Debug.Log("Permission UI:" + s_settings.PermissionRequestUI);
-            }
-        }
-
         public static void CheckAllPermissions()
         {
             if (PermissionGrantedAll) return;
@@ -26,12 +14,45 @@ namespace Zappar
 
         public static void RequestPermission()
         {
-            GetUARSettings();
-
-            if (s_settings.PermissionRequestUI)
+            if (ZSettings.UARSettings.PermissionRequestUI)
                 Z.PermissionRequestUi();
             else
                 Z.PermissionRequestAll();
+        }
+    }
+
+    public static class ZSettings
+    {
+        private static ZapparUARSettings s_settings;
+
+        public static ZapparUARSettings UARSettings
+        {
+            get
+            {
+                if (s_settings == null)
+                    s_settings = LoadUARSettings();
+                return s_settings;
+            }
+        }
+
+        private static ZapparUARSettings LoadUARSettings()
+        {
+            string path = ZapparUARSettings.MySettingsPath;
+
+            var settings = Resources.Load<ZapparUARSettings>(path.Substring(0, path.IndexOf(".asset")));
+
+            if (settings == null)
+            {
+                Debug.LogError("No UAR settings found at: " + path);
+            }
+            else
+            {
+#if !UNITY_EDITOR
+                Debug.Log("UAR Unity SDK version:" + settings.PackageVersion);
+#endif
+            }
+
+            return settings;
         }
     }
 }

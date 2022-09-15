@@ -16,6 +16,13 @@ namespace Zappar.Editor
             public static GUIContent OrientationContent = new GUIContent("Orientation", "During play offset the tracker's rotation accordingly");
         }
 
+        enum ImageTargetType : int
+        {
+            Flat = 0,
+            Cylindrical,
+            Conical
+        }
+
         private string m_imgTarget;
         private int m_targetIndx;
         private ZapparImageTrackingTarget.PlaneOrientation m_orient;
@@ -26,10 +33,17 @@ namespace Zappar.Editor
         private IntPtr? m_editorPipeline = null;
         [SerializeField]
         private IntPtr? m_editorTracker = null;
-        List<string> m_zptFiles = new List<string>();
+        private List<string> m_zptFiles = new List<string>();
+        [SerializeField]
+        private ImageTargetType m_targetType = ImageTargetType.Flat;
 
         private const int TrackIndx = 0;
-        private const string PreviewObjName = "Preview Image";
+        private const string PreviewObjName = "Preview Object";
+        private Matrix4x4 Rx = new Matrix4x4(
+            new Vector4(1, 0, 0, 0),
+            new Vector4(0, 0, 1, 0),
+            new Vector4(0, -1, 0, 0),
+            new Vector4(0, 0, 0, 1));
 
         private void OnEnable()
         {
@@ -54,7 +68,6 @@ namespace Zappar.Editor
                 m_targetIndx = Mathf.Max(m_zptFiles.IndexOf(m_imgTarget), 0);
             }
             m_orient = m_target.Orientation;
-
             ToggleImagePreview(m_imgPreviewEnabled);
         }
 
@@ -79,6 +92,7 @@ namespace Zappar.Editor
                     EditorGUILayout.LabelField("<color=#CC0011>No ZPT files found!</color>", new GUIStyle() { richText=true });
                 }
 
+                EditorGUI.BeginDisabledGroup(m_targetType != ImageTargetType.Flat);
                 m_orient = (ZapparImageTrackingTarget.PlaneOrientation)EditorGUILayout.EnumPopup(Styles.OrientationContent, m_target.Orientation);
                 if(m_orient != m_target.Orientation)
                 {
@@ -89,6 +103,7 @@ namespace Zappar.Editor
                         SetupImagePreview();
                     EditorUtility.SetDirty(m_target.gameObject);
                 }
+                EditorGUI.EndDisabledGroup();
             }
             //base.OnInspectorGUI();
 
@@ -111,7 +126,7 @@ namespace Zappar.Editor
 
             if (enable)
             {
-                if (!Z.HasInitialized() || (m_target.PreviewImagePlane != null))
+                if (!Z.HasInitialized() || (m_target.PreviewImageObject != null))
                     return;
 
                 OnZPTFilenameChange(m_target.Target);
@@ -121,9 +136,9 @@ namespace Zappar.Editor
                 //clear the preview
                 ClearEditorPipeline();
 
-                if (m_target.PreviewImagePlane != null)
+                if (m_target.PreviewImageObject != null)
                 {
-                    DestroyImmediate(m_target.PreviewImagePlane);
+                    DestroyImmediate(m_target.PreviewImageObject);
                     EditorUtility.SetDirty(m_target.gameObject);
                 }
             }
@@ -155,7 +170,11 @@ namespace Zappar.Editor
         private void SetupImagePreview()
         { 
             if (m_target==null || !m_imgPreviewEnabled) return;
-            
+
+            uint type = Z.ImageTrackerTargetType(m_editorTracker.Value, TrackIndx);
+            m_targetType = (ImageTargetType)type;
+            Debug.Log("Image target type: " + m_targetType);
+
             int previewWidth = Z.ImageTrackerTargetPreviewRgbaWidth(m_editorTracker.Value, TrackIndx);
             int previewHeight = Z.ImageTrackerTargetPreviewRgbaHeight(m_editorTracker.Value, TrackIndx);
 
@@ -164,51 +183,101 @@ namespace Zappar.Editor
             if (previewWidth == 0 || previewHeight == 0)
                 return;
 
-            if (m_target.PreviewImagePlane == null)
+            float topRadius = Z.ImageTrackerTargetRadiusTop(m_editorTracker.Value, TrackIndx);
+            float bottomRadius = Z.ImageTrackerTargetRadiusBottom(m_editorTracker.Value, TrackIndx);
+            float sideLength = Z.ImageTrackerTargetSideLength(m_editorTracker.Value, TrackIndx);
+            float meterScale = Z.ImageTrackerTargetPhysicalScaleFactor(m_editorTracker.Value, TrackIndx);
+            if (meterScale <= 0) meterScale = 1;
+#if UNITY_EDITOR
+            Debug.Log("params: TR:" + topRadius + " BR:" + bottomRadius + " SL:" + sideLength + " PS: " + meterScale);
+#endif
+            if (m_target.PreviewImageObject == null)
             {
-                GameObject plane = null;
-                for (int i = 0; i < m_target.transform.childCount; ++i)
+                GameObject previewObj = null;
+                for (int i = 0; i < m_target.transform.childCount && previewObj == null; ++i)
                 {
                     if (m_target.transform.GetChild(i).gameObject.name == PreviewObjName)
                     {
-                        plane = m_target.transform.GetChild(i).gameObject;
-                        if (plane.GetComponent<MeshFilter>() == null) plane = null;
+                        previewObj = m_target.transform.GetChild(i).gameObject;
+                        if (previewObj.GetComponent<MeshFilter>() == null) previewObj = null;
                     }
                 }
-                if (plane == null)
+                if (previewObj == null)
                 {
-                    m_target.PreviewImagePlane = GameObject.CreatePrimitive(PrimitiveType.Quad) as GameObject;
-                    Undo.RegisterCreatedObjectUndo(m_target.PreviewImagePlane, "New preview object");
-                    m_target.PreviewImagePlane.name = PreviewObjName;
-                    m_target.PreviewImagePlane.transform.SetParent(m_target.transform);
+                    //m_target.PreviewImagePlane = GameObject.CreatePrimitive(PrimitiveType.Quad) as GameObject;
+                    m_target.PreviewImageObject = new GameObject(PreviewObjName, new[] { typeof(MeshFilter), typeof(MeshRenderer) });
+                    Undo.RegisterCreatedObjectUndo(m_target.PreviewImageObject, "New preview object");
+                    m_target.PreviewImageObject.transform.SetParent(m_target.transform);
                 }
                 else
                 {
-                    m_target.PreviewImagePlane = plane;
+                    m_target.PreviewImageObject = previewObj;
                     EditorUtility.SetDirty(m_target.gameObject);
                 }
             }
+            
+            m_target.PreviewImageObject.transform.localPosition = Vector3.zero;
+            MeshFilter mf = m_target.PreviewImageObject.GetComponent<MeshFilter>();
+            if (mf.sharedMesh != null)
+                mf.sharedMesh.Clear();
+            else
+                mf.sharedMesh = new Mesh();
+            mf.sharedMesh.name = "Z" + m_targetType + "_target";
 
-            m_target.PreviewImagePlane.transform.localEulerAngles = m_target.Orientation == ZapparImageTrackingTarget.PlaneOrientation.Flat ?
-                new Vector3(90, 0, 0) : new Vector3(0,0,0);
-            m_target.PreviewImagePlane.transform.localPosition = Vector3.zero;
+            int[] tris = Z.ImageTrackerTargetPreviewMeshIndices(m_editorTracker.Value, TrackIndx);
+            for(int i=0;i<tris.Length;i+=3)
+            {
+                tris[i] = tris[i] + tris[i + 2];
+                tris[i + 2] = tris[i] - tris[i + 2];
+                tris[i] = tris[i] - tris[i + 2];
+            }
+            float[] verts = Z.ImageTrackerTargetPreviewMeshVertices(m_editorTracker.Value, TrackIndx);
+            float[] norms = Z.ImageTrackerTargetPreviewMeshNormals(m_editorTracker.Value, TrackIndx);
+            float[] uvs = Z.ImageTrackerTargetPreviewMeshUvs(m_editorTracker.Value, TrackIndx);
+            Vector3[] vs = new Vector3[verts.Length / 3];
+            for (int i = 0; i < vs.Length; ++i)
+            {
+                vs[i] = new Vector3(
+                      verts[3 * i],
+                      verts[3 * i + 1],
+                      -verts[3 * i + 2]
+                      );
+                if (m_targetType == ImageTargetType.Flat && m_orient == ZapparImageTrackingTarget.PlaneOrientation.Flat)
+                    vs[i] = Rx.MultiplyPoint3x4(vs[i]);
+            }
+            mf.sharedMesh.vertices = vs;
+            for (int i = 0; i < vs.Length; ++i)
+            {
+                vs[i] = new Vector3(
+                      norms[3 * i],
+                      norms[3 * i + 1],
+                      -norms[3 * i + 2]
+                      );
+                if (m_targetType == ImageTargetType.Flat && m_orient == ZapparImageTrackingTarget.PlaneOrientation.Flat)
+                    vs[i] = Rx.MultiplyPoint3x4(vs[i]);
+            }
+            mf.sharedMesh.normals = vs;
+            mf.sharedMesh.triangles = tris;
+            Vector2[] uv = new Vector2[uvs.Length / 2];
+            for (int i = 0; i < uv.Length; ++i)
+                uv[i] = new Vector2(uvs[2 * i], uvs[2 * i + 1]);
+            mf.sharedMesh.uv = uv;
 
-            float aspectRatio = (float)previewWidth / (float)previewHeight;
-            const float scaleFactor = 2f;
-            m_target.PreviewImagePlane.transform.localScale = new Vector3(aspectRatio, 1.0f, 1.0f) * scaleFactor;
-
-            byte[] previewData = Z.ImageTrackerTargetPreviewRgba(m_editorTracker.Value, 0);
-
+            byte[] previewData = Z.ImageTrackerTargetPreviewRgba(m_editorTracker.Value, TrackIndx);
+            
             Texture2D texture = new Texture2D(previewWidth, previewHeight, TextureFormat.RGBA32, false);
             texture.LoadRawTextureData(previewData);
             texture.Apply();
-
+            
             Material material = new Material(Shader.Find("Zappar/UnlitTextureUV"));
             material.mainTexture = texture;
-            material.SetFloat("_FlipTexY",1);
+            material.SetFloat("_FlipTexY", 1);
             material.EnableKeyword("FlipTexV");
-
-            m_target.PreviewImagePlane.GetComponent<Renderer>().material = material;
+            if (m_targetType != ImageTargetType.Flat)
+                material.SetInt("_Culling", 0);
+            m_target.PreviewImageObject.GetComponent<Renderer>().material = material;
+            if (m_targetType != ImageTargetType.Flat)
+                m_target.Orientation = ZapparImageTrackingTarget.PlaneOrientation.Vertical;
         }
 
         private void TargetDataAvailableCallback(byte[] data)

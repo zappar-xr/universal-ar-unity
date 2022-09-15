@@ -1,3 +1,5 @@
+<!-- Zappar WebGL template for Unity 2020 and above versions -->
+<!-- NFYNT -->
 <!DOCTYPE html>
 <html lang="en-us">
 
@@ -6,7 +8,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>{{{ PRODUCT_NAME }}}</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <style>
         html {
             box-sizing: border-box;
@@ -130,7 +131,7 @@
             <div class="spinner"></div>
         </div>
     </div>
-    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/0.3.12/zappar-cv.js"></script>
+    <script type="text/javascript" src="https://libs.zappar.com/zappar-cv/2.0.0/zappar-cv.js"></script>
     <script>
         var db = indexedDB.open("dummy_indexdb", 1); // iOS 14.6 fix; the call to open indexdb hangs forever otherwise
 
@@ -181,7 +182,6 @@
 
         function WaitForZCVLoad() {
             if (zappar.loaded()) {
-                //loadingCover.style.display = "none"; 
                 CreateUnityLoader();
                 return;
             }
@@ -195,7 +195,7 @@
                 progressBarFull.style.width = `${100 * progress}%`;
             }).then((unityInstance) => {
                 loadingCover.style.display = "none";
-                //WaitForZCVLoad();
+                window.uarGameInstance = unityInstance;
             }).catch((message) => {
                 alert(message);
             });
