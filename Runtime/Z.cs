@@ -550,6 +550,38 @@ public class Z
 #endif
     private static extern void zappar_pipeline_set(IntPtr o);
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [DllImport("ZCVAndroidRenderPlugin")]        
+#else
+    [DllImport(Config.PluginName)]
+#endif
+    private static extern void zappar_set_unity_face_mesh_buffer(IntPtr o, IntPtr vertexBuffer, int vertexCount);
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [DllImport("ZCVAndroidRenderPlugin")]        
+#else
+    [DllImport(Config.PluginName)]
+#endif
+    private static extern void zappar_clear_unity_face_mesh_buffer(IntPtr o);
+    
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [DllImport("ZCVAndroidRenderPlugin")]        
+#else
+    [DllImport(Config.PluginName)]
+#endif
+    private static extern int zappar_get_unity_face_mesh_buffers_count();
+
+    public static void FaceMeshSetVertexBuffer(IntPtr faceMesh, Mesh unityMesh)
+    {
+        IntPtr meshVertexBuffer = unityMesh.GetNativeVertexBufferPtr(0);
+        zappar_set_unity_face_mesh_buffer(faceMesh, meshVertexBuffer, unityMesh.vertexCount);
+    }
+
+    public static void FaceMeshClearVertexBuffer(IntPtr faceMesh)
+    {
+        zappar_clear_unity_face_mesh_buffer(faceMesh);
+    }
+
     private static Dictionary<IntPtr, Texture2D> m_texturePool = new Dictionary<IntPtr, Texture2D>();
 
     public static void PipelineGLContextSet(IntPtr pipeline) {
@@ -639,18 +671,62 @@ public class Z
             GL.IssuePluginEvent(zappar_upload_callback_native_gl(), 1);
         }
 #if UNITY_EDITOR_WIN
-        if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11) 
+        else if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11) 
         {
             zappar_pipeline_set(pipeline);
             GL.IssuePluginEvent(zappar_upload_callback_native_dx11(), 1);
         }
 #elif UNITY_IOS || UNITY_EDITOR_OSX
-        if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal) 
+        else if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal) 
         {
             zappar_pipeline_set(pipeline);
             GL.IssuePluginEvent(zappar_upload_callback_native_metal(), 1);
         }
 #endif
+        else { 
+            Debug.LogError("Unsupported graphics API. Please switch to either - DirectX11, OpenGL, or Metal depending upon your target platform");
+        }
+    }
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [DllImport("ZCVAndroidRenderPlugin")]        
+#else
+    [DllImport(Config.PluginName)]
+#endif
+    private static extern IntPtr zappar_update_face_mesh_buffer_callback_native_gl();
+
+#if UNITY_IOS || UNITY_EDITOR_OSX
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_update_face_mesh_buffer_callback_native_metal();
+#endif
+
+#if UNITY_EDITOR_WIN
+    [DllImport(Config.PluginName)]
+    private static extern IntPtr zappar_update_face_mesh_buffer_callback_native_dx11();
+#endif
+    public static void FaceMeshUpdateVertexBuffer()
+    {
+        if(zappar_get_unity_face_mesh_buffers_count()<=0) return;
+        if(SystemInfo.graphicsDeviceType==GraphicsDeviceType.OpenGLES2 || 
+            SystemInfo.graphicsDeviceType==GraphicsDeviceType.OpenGLES3 ||
+            SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore)
+        {
+            GL.IssuePluginEvent(zappar_update_face_mesh_buffer_callback_native_gl(), 1011);
+        }
+#if UNITY_EDITOR_WIN
+        else if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11)
+        {
+            GL.IssuePluginEvent(zappar_update_face_mesh_buffer_callback_native_dx11(), 1011);
+        }
+#elif UNITY_IOS || UNITY_EDITOR_OSX
+        else if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal) 
+        {
+            GL.IssuePluginEvent(zappar_update_face_mesh_buffer_callback_native_metal(), 1011);
+        }
+#endif
+        else
+        {
+            Debug.LogError("Unsupported graphics API. Please switch to either - DirectX11, OpenGL, orMetaldependingupo your target platform");
+        }
     }
 
     private static string GetValidZPTFilename(string filename)

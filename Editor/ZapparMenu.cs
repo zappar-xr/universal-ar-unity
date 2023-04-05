@@ -4,13 +4,14 @@ using System.Collections;
 using UnityEngine.Rendering;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
+using UnityEditor.SceneManagement;
 #if ZAPPAR_SRP
 using UnityEngine.Rendering.Universal;
 #endif
 
 namespace Zappar.Editor
 {
-    public class ZapparMenu : MonoBehaviour
+    internal class ZapparMenu : MonoBehaviour
     {
         private static ListRequest s_packageListRequest = null;
         private static AddRequest s_importRequest = null;
@@ -18,20 +19,14 @@ namespace Zappar.Editor
         public delegate void PackageListUpdated(ListRequest request);
         public static PackageListUpdated OnPackageListUpdated;
 
+        public static bool CreateNewARScene { get; set; }
+
 #region UtilitiesMenu
         [MenuItem("Zappar/Utilities/Full Head Model", false, 100)]
         public static void ZapparCreateFullHeadModel()
         {
             GameObject head = ZAssistant.GetZapparFullHeadModel();
             Undo.RegisterCreatedObjectUndo(head, "New head model");
-            Selection.activeGameObject = head;
-        }
-
-        [MenuItem("Zappar/Utilities/Full Head Depth Mask", false, 100)]
-        public static void ZapparCreateFullHeadDepthMask()
-        {
-            GameObject head = ZAssistant.GetZapparFullHeadDepthMask();
-            Undo.RegisterCreatedObjectUndo(head, "New depth mask");
             Selection.activeGameObject = head;
         }
 
@@ -55,6 +50,15 @@ namespace Zappar.Editor
         public static void ZapparOpenUarSettings()
         {
             SettingsService.OpenProjectSettings("Project/ZapparUARSettings");
+        }
+
+        [MenuItem("Zappar/Editor/New AR Scene &N",false,16)]
+        public static void ZapparNewARScene()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) { }
+            
+            CreateNewARScene = true;
+            EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects,NewSceneMode.Single);
         }
 
 #if ZAPPAR_SRP
@@ -260,6 +264,14 @@ namespace Zappar.Editor
             GameObject go = ZAssistant.GetZapparFaceLandmark();
             Undo.RegisterCreatedObjectUndo(go, "New face landmark");
             Selection.activeGameObject = go;
+        }
+
+        [MenuItem("Zappar/Face Tracker/Face Depth Mask", false, 35)]
+        public static void ZapparCreateFaceDepthMask()
+        {
+            GameObject head = ZAssistant.GetZapparFaceDepthMask();
+            Undo.RegisterCreatedObjectUndo(head, "New depth mask");
+            Selection.activeGameObject = head;
         }
 
         #endregion

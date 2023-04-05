@@ -60,6 +60,7 @@ namespace Zappar.Editor
             {
                 PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP); //default is IL2CPP
                 PlayerSettings.stripEngineCode = true;
+                PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.High);
                 EditorUserBuildSettings.development = false;
                 PlayerSettings.runInBackground = true;
 
@@ -78,18 +79,54 @@ namespace Zappar.Editor
 
                 //Build Settings
 #if UNITY_2020_1_OR_NEWER
-                PlayerSettings.WebGL.decompressionFallback = true;
+                //To improved caching on web
+                PlayerSettings.WebGL.nameFilesAsHashes = true;
+                //Remove this option when both Zapworks backend and CLI are configured for hosting compressed Unity builds
+                //PlayerSettings.WebGL.decompressionFallback = true; 
                 PlayerSettings.WebGL.template = "PROJECT:Zappar";
 #elif UNITY_2019_1_OR_NEWER
                 PlayerSettings.WebGL.template = "PROJECT:Zappar2019";
 #else
                 Debug.LogError("Please upgrade to newer versions of Unity");
 #endif
+                //Texture Compression
+#if UNITY_2020_1_OR_NEWER
+                if (EditorUserBuildSettings.webGLBuildSubtarget == WebGLTextureSubtarget.DXT)
+                {
+                    Debug.Log("Updating WebGL default TextureCompression to use ETC2, which is more widely supported on mobile devices. Change it from Player settings if not desired.");
+                    EditorUserBuildSettings.webGLBuildSubtarget = WebGLTextureSubtarget.ETC2;   //optimized for mobile builds
+                }
+#endif
             }
 
             if (ZAssistant.MatchConfigSettings(config, ZProjectSettings.GraphicsOptimum))
             {
+#if UNITY_2021_1_OR_NEWER
+                bool hasWebgl2 = false;
+                PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.WebGL, false);
+                GraphicsDeviceType[] gdts = PlayerSettings.GetGraphicsAPIs(BuildTarget.WebGL);
+                for(short i=0; i<gdts.Length;++i)
+                {
+                    if (gdts[i] == GraphicsDeviceType.OpenGLES3)
+                    {
+                        hasWebgl2 = true;
+                        if (i != 0)
+                        {
+                            //swap GLES3 as first preference
+                            gdts[i] = gdts[0];
+                            gdts[0] = GraphicsDeviceType.OpenGLES3;
+                            PlayerSettings.SetGraphicsAPIs(BuildTarget.WebGL, gdts);
+                        }
+                        break;
+                    }
+                }
+                if (!hasWebgl2) {
+                    PlayerSettings.SetGraphicsAPIs(BuildTarget.WebGL, new[] { GraphicsDeviceType.OpenGLES3 });
+                    Debug.Log("Updated project to use WebGL 2.0 graphics API, which has better performance and quality compared to 1.0. Check for browser support here: https://caniuse.com/?search=webgl%202.0. Change it from Player settings if not desired.");
+                }
+#else
                 PlayerSettings.SetGraphicsAPIs(BuildTarget.WebGL, new[] { GraphicsDeviceType.OpenGLES2 });
+#endif
             }
 
 #elif UNITY_ANDROID
@@ -140,7 +177,7 @@ namespace Zappar.Editor
             }
 
 #endif
-        }
+            }
 
 #region ZapparResources
 
@@ -148,6 +185,8 @@ namespace Zappar.Editor
         {
             GameObject go = new GameObject("Zappar Camera", new[] { typeof(Camera), typeof(ZapparCamera) });
             GameObject child = new GameObject("Zappar Camera Background", new[] { typeof(Camera), typeof(ZapparCameraBackground) });
+            child.GetComponent<Camera>().clearFlags = CameraClearFlags.SolidColor;
+            child.GetComponent<Camera>().backgroundColor = Color.black;
             child.GetComponent<Camera>().cullingMask = 0;
             child.tag = "MainCamera";
             child.transform.SetParent(go.transform);
@@ -184,7 +223,7 @@ namespace Zappar.Editor
             GameObject go = new GameObject("Zappar Face Tracking Anchor", new[] { typeof(ZapparFaceTrackingAnchor) });
             GameObject child = GetZapparFullHeadModel();
             child.transform.SetParent(go.transform);
-            child = GetZapparFullHeadDepthMask();
+            child = GetZapparFaceDepthMask();
             child.transform.SetParent(go.transform);
             return go;
         }
@@ -234,7 +273,7 @@ namespace Zappar.Editor
             return go;
         }
 
-        public static GameObject GetZapparFullHeadDepthMask()
+        public static GameObject GetZapparFaceDepthMask()
         {
             GameObject go = new GameObject("Zappar Full Head Depth Mask", new[] {typeof(MeshFilter),
             typeof(MeshRenderer),

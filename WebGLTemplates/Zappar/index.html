@@ -7,6 +7,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="shortcut icon" href="favicon.ico">
     <title>{{{ PRODUCT_NAME }}}</title>
     <style>
         html {
@@ -140,17 +141,35 @@
         const config = {
             dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
             frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+        #if USE_THREADS
+            workerUrl: buildUrl + "/{{{ WORKER_FILENAME }}}",
+        #endif
+        #if USE_WASM
             codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
-            #if MEMORY_FILENAME
-        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
-            #endif
-#if SYMBOLS_FILENAME
-        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
-            #endif
-        streamingAssetsUrl: "StreamingAssets",
+        #endif
+        #if MEMORY_FILENAME
+           memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+        #endif
+        #if SYMBOLS_FILENAME
+            symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+        #endif
+            streamingAssetsUrl: "StreamingAssets",
             companyName: "{{{ COMPANY_NAME }}}",
             productName: "{{{ PRODUCT_NAME }}}",
             productVersion: "{{{ PRODUCT_VERSION }}}",
+        //Useful when used along with Filename as Hashes option
+        #if USE_DATA_CACHING
+            cacheControl: function (url) {
+            // typically includes: .data, .bundle, .zpt
+            ZAPPAR_WEBGL_CACHING   
+            if (url.match(/\.mp4/) || url.match(/\.custom/) || url.match(/\.zbin/)) {
+                return "immutable";
+            }   
+            // Disable explicit caching for all other files.
+            // Note: the default browser cache may cache them anyway.
+            return "no-store";
+            },
+        #endif
         };
 
         const container = document.querySelector("#unity-container");
