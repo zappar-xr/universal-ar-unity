@@ -90,7 +90,7 @@ namespace Zappar.Editor
                 Debug.LogError("Please upgrade to newer versions of Unity");
 #endif
                 //Texture Compression
-#if UNITY_2020_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 if (EditorUserBuildSettings.webGLBuildSubtarget == WebGLTextureSubtarget.DXT)
                 {
                     Debug.Log("Updating WebGL default TextureCompression to use ETC2, which is more widely supported on mobile devices. Change it from Player settings if not desired.");
