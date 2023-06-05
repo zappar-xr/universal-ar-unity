@@ -29,6 +29,15 @@ namespace Zappar.Editor
 
             //Cache UARSettings in local asset database 
             ZapparUARSettingsProvider.GetOrCreateSettings();
+
+#if !UNITY_2021_3_OR_NEWER
+            //C++11 or above required for compiling advanced mesh plugins with EMC
+            if (!PlayerSettings.WebGL.emscriptenArgs.Contains("-std"))
+            {
+                PlayerSettings.WebGL.emscriptenArgs += " -std=c++11";
+                Debug.Log("Updated WebGL emscripten arguments: " + PlayerSettings.WebGL.emscriptenArgs);
+            }
+#endif
         }
     }
 }

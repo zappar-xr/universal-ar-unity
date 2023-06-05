@@ -81,14 +81,14 @@
     	float uv[2];
     };
 
-    EM_JS(void, log_string, (const char *msg), {
-        console.log(UTF8ToString(msg));
-    });
+    // EM_JS(void, log_string, (const char *msg), {
+    //     console.log(UTF8ToString(msg));
+    // });
 
     extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API zappar_set_unity_face_mesh_buffer(zappar_face_mesh_t faceMesh, void* vertexBufferHandle, int vertexCount)
     {
         if(vertexBufferHandle==nullptr || vertexCount<=0){
-            log_string("Invalid vertex buffer handle or vertexCount, in zappar_set_mesh_buffers_from_unity in face mesh pipeline!");
+            //log_string("Invalid vertex buffer handle or vertexCount, in zappar_set_mesh_buffers_from_unity in face mesh pipeline!");
             return;
         }
         s_faceMeshUnityVertexBuffers[faceMesh] = std::make_pair(vertexBufferHandle,vertexCount);
@@ -135,7 +135,10 @@
     });
 
     static void UNITY_INTERFACE_API OnNativeGLFaceMeshEvent(int eventID){
-        if(eventID!=1011) { log_string("Invalid event id"); return;}
+        if(eventID!=1011) { 
+            //log_string("Invalid event id"); 
+            return;
+        }
         
         for(auto& fmb : s_faceMeshUnityVertexBuffers) { 
             int vertexCount = fmb.second.second;
@@ -146,7 +149,10 @@
             GLint bufferSize = 0;
             glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
             void* mapped = s_mVertexBuffers[fmb.first]; //malloc(bufferSize);
-            if(!mapped) { log_string("No cpu bound vertex buffer found!");continue;}
+            if(!mapped) { 
+                //log_string("No cpu bound vertex buffer found!");
+                continue;
+            }
 
             int vertexStride = int(bufferSize / vertexCount);
             char* bufferPtr = (char*)mapped;

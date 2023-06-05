@@ -11,7 +11,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Zappar.Editor
 {
-    internal class ZapparMenu : MonoBehaviour
+    public sealed class ZapparMenu : MonoBehaviour
     {
         private static ListRequest s_packageListRequest = null;
         private static AddRequest s_importRequest = null;

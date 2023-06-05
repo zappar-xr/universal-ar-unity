@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.2.2] - 2023-06-02
+### Fixed
+- WebGL build error on Unity 2019 due to emscripten optimization and missing C++11 std support.
+
+
 ## [3.2.1] - 2023-05-31
 ### Fixed
 - Package import error on UnityEditor version 2020.x for unsupported webGLBuildSubtarget API.
