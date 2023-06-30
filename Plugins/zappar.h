@@ -191,7 +191,7 @@ ZAPPAR_EXPORT int zappar_permission_denied_camera();
 #if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
 ZAPPAR_EXPORT int zappar_permission_denied_motion();
 #endif
-ZAPPAR_EXPORT void zappar_analytics_project_id_set(const char * id);
+ZAPPAR_EXPORT void zappar_analytics_project_id_set(const char * id, const char * uid);
 
 
 

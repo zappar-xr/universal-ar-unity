@@ -197,7 +197,7 @@ public class Z
     [DllImport(Config.PluginName)]
     private static extern int zappar_permission_denied_motion();
     [DllImport(Config.PluginName)]
-    private static extern void zappar_analytics_project_id_set(string id);
+    private static extern void zappar_analytics_project_id_set(string id, string uid);
     
         [DllImport(Config.PluginName)]
     private static extern IntPtr zappar_pipeline_create();
@@ -972,9 +972,10 @@ public class Z
         int ret = zappar_permission_denied_motion();
         return (ret == 1) ? true : false;
     }
-	public static void AnalyticsProjectIdSet(string id) {
+	public static void AnalyticsProjectIdSet(string id, string uid) {
         
-        zappar_analytics_project_id_set(id);
+	
+        zappar_analytics_project_id_set(id, uid);
         
     }
     

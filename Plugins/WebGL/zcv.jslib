@@ -189,9 +189,10 @@ $zappar_support__postset: `
         var ret = zappar.permission_denied_motion();
         return ret;
     };
-	_zappar_analytics_project_id_set = function(id) {
+	_zappar_analytics_project_id_set = function(id, uid) {
         var id_val = UTF8ToString(id);
-        var ret = zappar.analytics_project_id_set(id_val);
+		var uid_val = UTF8ToString(uid);
+        var ret = zappar.analytics_project_id_set(id_val, uid_val);
         return ret;
     };
     
