@@ -50,6 +50,10 @@ namespace Zappar
             m_textureMatElements = new float[16];
             m_backgroundCamera = GetComponent<Camera>();
             m_camerModel = new float[] { 0, 0, 0, 0, 0, 0 };
+            if(QualitySettings.activeColorSpace == ColorSpace.Linear)
+            {
+                m_cameraMaterial.EnableKeyword("Z_GAMMA_CORRECTION");
+            }
         }
 
         void Point(float x, float y)

@@ -96,6 +96,12 @@ enum zappar_log_level_t {
     LOG_LEVEL_VERBOSE = 3
 };
 
+enum zappar_world_tracker_quality_t {
+    WORLD_TRACKER_QUALITY_INITIALIZING = 0,
+    WORLD_TRACKER_QUALITY_GOOD = 1,
+    WORLD_TRACKER_QUALITY_ORIENTATION_ONLY = 2
+};
+
 typedef void (*zappar_log_redirect_t)(zappar_log_level_t, const char *);  // Optional method for zcv log redirection
 
 enum zappar_frame_pixel_format_t {
@@ -191,7 +197,7 @@ ZAPPAR_EXPORT int zappar_permission_denied_camera();
 #if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
 ZAPPAR_EXPORT int zappar_permission_denied_motion();
 #endif
-ZAPPAR_EXPORT void zappar_analytics_project_id_set(const char * id);
+ZAPPAR_EXPORT void zappar_analytics_project_id_set(const char * id, const char * uid);
 
 
 
@@ -248,8 +254,12 @@ ZAPPAR_EXPORT const float * zappar_pipeline_camera_frame_device_attitude(zappar_
 ZAPPAR_EXPORT int zappar_pipeline_camera_frame_user_facing(zappar_pipeline_t o);
 #endif
 ZAPPAR_EXPORT void zappar_pipeline_motion_accelerometer_submit(zappar_pipeline_t o, double time, float x, float y, float z);
+ZAPPAR_EXPORT void zappar_pipeline_motion_accelerometer_with_gravity_submit_int(zappar_pipeline_t o, double time, double interval, float x, float y, float z);
+ZAPPAR_EXPORT void zappar_pipeline_motion_accelerometer_without_gravity_submit_int(zappar_pipeline_t o, double time, double interval, float x, float y, float z);
 ZAPPAR_EXPORT void zappar_pipeline_motion_rotation_rate_submit(zappar_pipeline_t o, double time, float x, float y, float z);
+ZAPPAR_EXPORT void zappar_pipeline_motion_rotation_rate_submit_int(zappar_pipeline_t o, double time, double interval, float x, float y, float z);
 ZAPPAR_EXPORT void zappar_pipeline_motion_attitude_submit(zappar_pipeline_t o, double time, float x, float y, float z);
+ZAPPAR_EXPORT void zappar_pipeline_motion_attitude_submit_int(zappar_pipeline_t o, double time, double interval, float x, float y, float z);
 ZAPPAR_EXPORT void zappar_pipeline_motion_attitude_matrix_submit(zappar_pipeline_t o, const float * mat);
 #if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
 ZAPPAR_EXPORT void zappar_pipeline_sequence_record_start(zappar_pipeline_t o, int expected_frames);
@@ -523,6 +533,43 @@ ZAPPAR_EXPORT void zappar_instant_world_tracker_anchor_pose_set_from_camera_offs
 #if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
 ZAPPAR_EXPORT void zappar_instant_world_tracker_anchor_pose_set_from_camera_offset(zappar_instant_world_tracker_t o, float x, float y, float z, zappar_instant_world_tracker_transform_orientation_t);
 #endif
+
+
+
+// ### world_tracker ###
+
+typedef struct zappar_world_tracker_ti* zappar_world_tracker_t;
+ZAPPAR_EXPORT zappar_world_tracker_t zappar_world_tracker_create(zappar_pipeline_t pipeline);
+ZAPPAR_EXPORT void zappar_world_tracker_destroy(zappar_world_tracker_t);
+
+ZAPPAR_EXPORT int zappar_world_tracker_enabled(zappar_world_tracker_t o);
+ZAPPAR_EXPORT void zappar_world_tracker_enabled_set(zappar_world_tracker_t o, int enabled);
+ZAPPAR_EXPORT int zappar_world_tracker_quality(zappar_world_tracker_t o);
+ZAPPAR_EXPORT int zappar_world_tracker_plane_count(zappar_world_tracker_t o);
+ZAPPAR_EXPORT const float * zappar_world_tracker_plane_pose_raw(zappar_world_tracker_t o, int indx);
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_plane_pose_camera_relative(zappar_world_tracker_t o, int indx, int mirror);
+#endif
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_plane_pose(zappar_world_tracker_t o, int indx, const float * camera_pose, int mirror);
+#endif
+ZAPPAR_EXPORT int zappar_world_tracker_world_anchor_valid(zappar_world_tracker_t o);
+ZAPPAR_EXPORT const float * zappar_world_tracker_world_anchor_pose_raw(zappar_world_tracker_t o);
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_world_anchor_pose_camera_relative(zappar_world_tracker_t o, int mirror);
+#endif
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_world_anchor_pose(zappar_world_tracker_t o, const float * camera_pose, int mirror);
+#endif
+ZAPPAR_EXPORT int zappar_world_tracker_ground_anchor_valid(zappar_world_tracker_t o);
+ZAPPAR_EXPORT const float * zappar_world_tracker_ground_anchor_pose_raw(zappar_world_tracker_t o);
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_ground_anchor_pose_camera_relative(zappar_world_tracker_t o, int mirror);
+#endif
+#if defined(IOS_OBJ_C) || defined(__ANDROID__) || defined(WIN32)
+ZAPPAR_EXPORT const float * zappar_world_tracker_ground_anchor_pose(zappar_world_tracker_t o, const float * camera_pose, int mirror);
+#endif
+ZAPPAR_EXPORT void zappar_world_tracker_reset(zappar_world_tracker_t o);
 
 
 

@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Rendering;
 
 namespace Zappar.Editor
 {
@@ -20,52 +21,59 @@ namespace Zappar.Editor
             //Copy WebGL templates from package to project
             string srcDir = "Packages/com.zappar.uar/WebGLTemplates";
             string destDir = Application.dataPath + "/WebGLTemplates";
-            DirectoryCopy(srcDir, destDir, true);
+            Utils.ZUtils.DirectoryCopy(srcDir, destDir, true);
 
             //Copy test zpt
             srcDir = "Packages/com.zappar.uar/ZapparResources~";
             destDir = Application.streamingAssetsPath;
-            DirectoryCopy(srcDir, destDir, false);
+            Utils.ZUtils.DirectoryCopy(srcDir, destDir, false);
 
             //Cache UARSettings in local asset database 
             ZapparUARSettingsProvider.GetOrCreateSettings();
+
+            //Add Zappar/CameraBackgroundShader to be always included
+            AddAlwaysIncludedShader("Zappar/CameraBackgroundShader");
+
+#if !UNITY_2021_3_OR_NEWER
+            //C++11 or above required for compiling advanced mesh plugins with EMC
+            if (!PlayerSettings.WebGL.emscriptenArgs.Contains("-std"))
+            {
+                PlayerSettings.WebGL.emscriptenArgs += " -std=c++11";
+                Debug.Log("Updated WebGL emscripten arguments: " + PlayerSettings.WebGL.emscriptenArgs);
+            }
+#endif
         }
 
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        public static void AddAlwaysIncludedShader(string shaderName)
         {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-
-            if (!dir.Exists)
-            {
-                //Debug.Log("Source directory does not exist or could not be found: " + sourceDirName);
+            Shader shader = Shader.Find(shaderName);
+            if (shader == null)
                 return;
-            }
 
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            // If the destination directory doesn't exist, create it.       
-            Directory.CreateDirectory(destDirName);
-
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
+            GraphicsSettings gSettings = AssetDatabase.LoadAssetAtPath<GraphicsSettings>("ProjectSettings/GraphicsSettings.asset");
+            SerializedObject so = new SerializedObject(gSettings);
+            SerializedProperty arrayProp = so.FindProperty("m_AlwaysIncludedShaders");
+            bool hasShader = false;
+            for (int i = 0; i < arrayProp.arraySize; ++i)
             {
-                if (file.Extension == ".meta")
-                    continue;
-
-                string tempPath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(tempPath, true);
-            }
-
-            // If copying subdirectories, copy them and their contents to new location.
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
+                SerializedProperty arrayElem = arrayProp.GetArrayElementAtIndex(i);
+                if (shader == arrayElem.objectReferenceValue)
                 {
-                    string tempPath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
+                    hasShader = true;
+                    break;
                 }
+            }
+
+            if (!hasShader)
+            {
+                int arrayIndex = arrayProp.arraySize;
+                arrayProp.InsertArrayElementAtIndex(arrayIndex);
+                SerializedProperty arrayElem = arrayProp.GetArrayElementAtIndex(arrayIndex);
+                arrayElem.objectReferenceValue = shader;
+
+                so.ApplyModifiedProperties();
+
+                AssetDatabase.SaveAssets();
             }
         }
     }

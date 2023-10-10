@@ -141,12 +141,12 @@ namespace Zappar
 
         public virtual void OnDestroy()
         {
-            if (m_pipeline != null) Z.PipelineDestroy(m_pipeline.Value);
             if (m_camera != null)
             {
                 Z.CameraSourcePause(m_camera.Value);
                 Z.CameraSourceDestroy(m_camera.Value);
             }
+            if (m_pipeline != null) Z.PipelineDestroy(m_pipeline.Value);
             m_hasInitialized = false;
         }
 

@@ -4,6 +4,71 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2023-10-10
+### Added
+- New world tracking for WebGL platform.
+- Added support for YUY2 and uncompressed RGB24 and RGB32, video format input for windows webcam devices.
+
+### Fixed
+- Windows editor black camera texture on editor version 2022LTS, due to changed default color space from gamma to linear. Related [issue #23](https://github.com/zappar-xr/universal-ar-unity/issues/23).
+- Windows editor support for UTF8 multibyte encoding for camera names.
+- Black frames on native android when switching between front and rear camera.
+- Appropriate handling of both `Gamma` and `Linear` color spaces across all platforms.
+
+### Known Issues
+- New world tracking not supported for native Android or iOS target.
+- Shader error for `Zappar/UnlitTexAndShadowSRP` on package import for built-in render pipeline. This doesn't effect the built-in project and can be simply ignored.
+
+
+## [3.2.4] - 2023-07-06
+### Added
+- Whitelisted `ngork-free` domain
+
+
+## [3.2.3] - 2023-06-30
+### Fixed
+- Some fixes and improvements for curved surface tracking.
+
+
+## [3.2.2] - 2023-06-02
+### Fixed
+- WebGL build error on Unity 2019 due to emscripten optimization and missing C++11 std support.
+
+
+## [3.2.1] - 2023-05-31
+### Fixed
+- Package import error on UnityEditor version 2020.x for unsupported webGLBuildSubtarget API.
+- Safari 16.4 screen orientation fix for upside-down screen in landscape mode.
+
+
+## [3.2.0] - 2023-04-05
+### Added
+- Support for Unity silicon editor.
+- New menu option: `Zappar/Editor/New AR Scene &N`. Which creates a new scene with `ZapparCamera` without any skybox and flat lighting setup for the scene.
+- Provided favicon.ico as part of WebGLTemplate to avoid 404 error on start in browsers.
+
+### Changed
+- Updated `ZapparFaceMesh` to use advanced mesh API for native GFX updates respective to each platform.
+- Updated `ZapparBackgroundCamera` `ClearFlags` from Skybox to SolidColor, for better mobile performance.
+- Zappar in-editor publishing menu now uses WebGL 2.0 graphics API on Unity version 2021 LTS and above.
+- Zappar in-editor publishing menu updates WebGL `Texture Compression` to `ETC2` in favor of mobile browsers.
+- Removed `Decompression Fallback` as the default option from UAR WebGL publishing setting. Support for both `Brotli` and `Gzip` compressed builds are now fully supported from `Zapworks` [dashboard](https://my.zap.works/) and `zapworks-cli` version [2.0.4](https://www.npmjs.com/package/@zappar/zapworks-cli) and above.
+- Improved WebGL build caching by enabling `WebGL.nameFilesAsHashes` from the publishing menu option, and caching zbin and zpt file types on Unity 2020 and above.
+- Auto link required frameworks (`Accelerate` and `OpenGLES`) in Unity built iOS Xcode project.
+- Moved the menu option `Zappar/Utilities/Full Head Depth Mask` to `Zappar/Face Tracker/Face Depth Mask`.
+
+### Known issues
+- Selecting OpenGL graphics API for windows standalone crashes the Editor. The default graphics API of Direct3D11 should work fine.
+- Color space mismatch between Unity and ZCV resulting in darker camera texture with Metal API on MacOS and iOS native. A temporary fix is provided in the thread [here](https://github.com/zappar-xr/universal-ar-unity/issues/11).
+- Package import error on UnityEditor version 2020.x for unsupported webGLBuildSubtarget API.
+
+
+
+## [3.1.1] - 2023-03-27
+### Changed
+- Patch release, to fix rear camera selection in Safari. For iOS version 16.4 it seems to have been changed to use ultrawide lens instead of normal camera.
+
+
 ## [3.1.0] - 2022-07-28
 ### Added
 - Cylindrical and conical image training and tracking target type.

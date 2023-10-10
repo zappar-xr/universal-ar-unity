@@ -101,7 +101,7 @@ namespace Zappar
             
             if (m_placeOnTouch && Input.touchCount > 0)
             {
-                UserHasPlaced = true;
+                PlaceTrackerAnchor();
             }
 
             UpdateTargetPose();

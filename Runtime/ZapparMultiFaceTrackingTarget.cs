@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -65,6 +66,8 @@ namespace Zappar
                 OnZapparCameraPaused(ZapparCamera.Instance.CameraSourcePaused);
                 OnZapparInitialized(ZapparCamera.Instance.GetPipeline);
             }
+
+            StartCoroutine(UpdateEndOfFrame());
         }
 
         private void Update()
@@ -94,6 +97,18 @@ namespace Zappar
             }
         }
 
+        private IEnumerator UpdateEndOfFrame()
+        {
+            while (true)
+            {
+                yield return new WaitForEndOfFrame();
+
+                if (!HasInitialized) continue;
+
+                Z.FaceMeshUpdateVertexBuffer();
+            }
+        }
+
         private void OnDestroy()
         {
             if(HasInitialized)
@@ -105,6 +120,8 @@ namespace Zappar
                 }
                 HasInitialized = false;
             }
+
+            StopCoroutine(UpdateEndOfFrame());
         }
 
         public void RegisterAnchor(ZapparFaceTrackingAnchor anchor, bool add)

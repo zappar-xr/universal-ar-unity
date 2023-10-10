@@ -14,7 +14,7 @@ Shader "Zappar/CameraBackgroundShader"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_fog
+            #pragma shader_feature Z_GAMMA_CORRECTION
 
             #include "UnityCG.cginc"
 
@@ -47,6 +47,9 @@ Shader "Zappar/CameraBackgroundShader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv);
+                #if Z_GAMMA_CORRECTION
+                col.rgb=pow(col.rgb,2.2);
+                #endif
                 return col;
             }
             ENDCG

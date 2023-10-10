@@ -15,7 +15,7 @@ $zappar_support__postset: `
     _zappar_initialize = function() {
         if (typeof ZCV === 'undefined') {
             var scr = document.createElement("script");
-            scr.src="https://libs.zappar.com/zappar-cv/2.0.0/zappar-cv.js";
+            scr.src="https://libs.zappar.com/zappar-cv/3.0.0-beta.1/zappar-cv.js";
             scr.addEventListener('load', function() {
                 zappar = ZCV.initialize();
                 hasInitialized = true;
@@ -32,7 +32,13 @@ $zappar_support__postset: `
 
         var zappar_native_callbacks = {
             process_gl: _zappar_pipeline_process_gl,
-            upload_gl: _zappar_pipeline_camera_frame_upload_gl
+            upload_gl: _zappar_pipeline_camera_frame_upload_gl,
+            face_mesh_vertices: _zappar_face_mesh_vertices,
+            face_mesh_vertices_size: _zappar_face_mesh_vertices_size,
+            face_mesh_normals: _zappar_face_mesh_normals,
+            face_mesh_normals_size: _zappar_face_mesh_normals_size,
+            face_mesh_uvs: _zappar_face_mesh_uvs,
+            face_mesh_uvs_size: _zappar_face_mesh_uvs_size
         };
 
         window.zappar_native_callbacks = zappar_native_callbacks;
@@ -183,9 +189,10 @@ $zappar_support__postset: `
         var ret = zappar.permission_denied_motion();
         return ret;
     };
-	_zappar_analytics_project_id_set = function(id) {
+	_zappar_analytics_project_id_set = function(id, uid) {
         var id_val = UTF8ToString(id);
-        var ret = zappar.analytics_project_id_set(id_val);
+		var uid_val = UTF8ToString(uid);
+        var ret = zappar.analytics_project_id_set(id_val, uid_val);
         return ret;
     };
     
@@ -313,6 +320,24 @@ $zappar_support__postset: `
         var ret = zappar.pipeline_motion_accelerometer_submit(o, time_val, x_val, y_val, z_val);
         return ret;
     };
+	_zappar_pipeline_motion_accelerometer_with_gravity_submit_int = function(o, time, interval, x, y, z) {
+        var time_val = time;
+		var interval_val = interval;
+		var x_val = x;
+		var y_val = y;
+		var z_val = z;
+        var ret = zappar.pipeline_motion_accelerometer_with_gravity_submit_int(o, time_val, interval_val, x_val, y_val, z_val);
+        return ret;
+    };
+	_zappar_pipeline_motion_accelerometer_without_gravity_submit_int = function(o, time, interval, x, y, z) {
+        var time_val = time;
+		var interval_val = interval;
+		var x_val = x;
+		var y_val = y;
+		var z_val = z;
+        var ret = zappar.pipeline_motion_accelerometer_without_gravity_submit_int(o, time_val, interval_val, x_val, y_val, z_val);
+        return ret;
+    };
 	_zappar_pipeline_motion_rotation_rate_submit = function(o, time, x, y, z) {
         var time_val = time;
 		var x_val = x;
@@ -321,12 +346,30 @@ $zappar_support__postset: `
         var ret = zappar.pipeline_motion_rotation_rate_submit(o, time_val, x_val, y_val, z_val);
         return ret;
     };
+	_zappar_pipeline_motion_rotation_rate_submit_int = function(o, time, interval, x, y, z) {
+        var time_val = time;
+		var interval_val = interval;
+		var x_val = x;
+		var y_val = y;
+		var z_val = z;
+        var ret = zappar.pipeline_motion_rotation_rate_submit_int(o, time_val, interval_val, x_val, y_val, z_val);
+        return ret;
+    };
 	_zappar_pipeline_motion_attitude_submit = function(o, time, x, y, z) {
         var time_val = time;
 		var x_val = x;
 		var y_val = y;
 		var z_val = z;
         var ret = zappar.pipeline_motion_attitude_submit(o, time_val, x_val, y_val, z_val);
+        return ret;
+    };
+	_zappar_pipeline_motion_attitude_submit_int = function(o, time, interval, x, y, z) {
+        var time_val = time;
+		var interval_val = interval;
+		var x_val = x;
+		var y_val = y;
+		var z_val = z;
+        var ret = zappar.pipeline_motion_attitude_submit_int(o, time_val, interval_val, x_val, y_val, z_val);
         return ret;
     };
 	_zappar_pipeline_motion_attitude_matrix_submit = function(o, mat) {
@@ -933,6 +976,124 @@ $zappar_support__postset: `
         return ret;
     };
     
+	
+    _zappar_world_tracker_create = function(pipeline) {
+        var pipeline_val = pipeline;
+        var ret = zappar.world_tracker_create(pipeline_val);
+        return ret;
+    };
+    _zappar_world_tracker_destroy = function(o) {
+        var o_val = o;
+        var ret = zappar.world_tracker_destroy(o_val);
+        return ret;
+    };
+    _zappar_world_tracker_enabled = function(o) {
+        
+        var ret = zappar.world_tracker_enabled(o);
+        return ret;
+    };
+	_zappar_world_tracker_enabled_set = function(o, enabled) {
+        var enabled_val = enabled;
+        var ret = zappar.world_tracker_enabled_set(o, enabled_val);
+        return ret;
+    };
+	_zappar_world_tracker_quality = function(o) {
+        
+        var ret = zappar.world_tracker_quality(o);
+        return ret;
+    };
+	_zappar_world_tracker_plane_count = function(o) {
+        
+        var ret = zappar.world_tracker_plane_count(o);
+        return ret;
+    };
+	_zappar_world_tracker_plane_pose_raw = function(o, indx) {
+        var indx_val = indx;
+        var ret = zappar.world_tracker_plane_pose_raw(o, indx_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_plane_pose_camera_relative = function(o, indx, mirror) {
+        var indx_val = indx;
+		var mirror_val = mirror;
+        var ret = zappar.world_tracker_plane_pose_camera_relative(o, indx_val, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_plane_pose = function(o, indx, camera_pose, mirror) {
+        var indx_val = indx;
+		var camera_pose_val = new Float32Array(16);
+        camera_pose_val.set(HEAPF32.subarray(camera_pose/4, 16 + camera_pose / 4));
+		var mirror_val = mirror;
+        var ret = zappar.world_tracker_plane_pose(o, indx_val, camera_pose_val, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_world_anchor_valid = function(o) {
+        
+        var ret = zappar.world_tracker_world_anchor_valid(o);
+        return ret;
+    };
+	_zappar_world_tracker_world_anchor_pose_raw = function(o) {
+        
+        var ret = zappar.world_tracker_world_anchor_pose_raw(o);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_world_anchor_pose_camera_relative = function(o, mirror) {
+        var mirror_val = mirror;
+        var ret = zappar.world_tracker_world_anchor_pose_camera_relative(o, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_world_anchor_pose = function(o, camera_pose, mirror) {
+        var camera_pose_val = new Float32Array(16);
+        camera_pose_val.set(HEAPF32.subarray(camera_pose/4, 16 + camera_pose / 4));
+		var mirror_val = mirror;
+        var ret = zappar.world_tracker_world_anchor_pose(o, camera_pose_val, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_ground_anchor_valid = function(o) {
+        
+        var ret = zappar.world_tracker_ground_anchor_valid(o);
+        return ret;
+    };
+	_zappar_world_tracker_ground_anchor_pose_raw = function(o) {
+        
+        var ret = zappar.world_tracker_ground_anchor_pose_raw(o);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_ground_anchor_pose_camera_relative = function(o, mirror) {
+        var mirror_val = mirror;
+        var ret = zappar.world_tracker_ground_anchor_pose_camera_relative(o, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_ground_anchor_pose = function(o, camera_pose, mirror) {
+        var camera_pose_val = new Float32Array(16);
+        camera_pose_val.set(HEAPF32.subarray(camera_pose/4, 16 + camera_pose / 4));
+		var mirror_val = mirror;
+        var ret = zappar.world_tracker_ground_anchor_pose(o, camera_pose_val, mirror_val);
+        var buffer = _malloc(16 * 4);
+        HEAPF32.set(ret, buffer / 4);
+        return buffer;
+    };
+	_zappar_world_tracker_reset = function(o) {
+        
+        var ret = zappar.world_tracker_reset(o);
+        return ret;
+    };
+    
 
     }());
 `,
@@ -1094,11 +1255,23 @@ $zappar_support__postset: `
     zappar_pipeline_motion_accelerometer_submit: function() {},
     zappar_pipeline_motion_accelerometer_submit__deps: ['$zappar_support'],
 	
+    zappar_pipeline_motion_accelerometer_with_gravity_submit_int: function() {},
+    zappar_pipeline_motion_accelerometer_with_gravity_submit_int__deps: ['$zappar_support'],
+	
+    zappar_pipeline_motion_accelerometer_without_gravity_submit_int: function() {},
+    zappar_pipeline_motion_accelerometer_without_gravity_submit_int__deps: ['$zappar_support'],
+	
     zappar_pipeline_motion_rotation_rate_submit: function() {},
     zappar_pipeline_motion_rotation_rate_submit__deps: ['$zappar_support'],
 	
+    zappar_pipeline_motion_rotation_rate_submit_int: function() {},
+    zappar_pipeline_motion_rotation_rate_submit_int__deps: ['$zappar_support'],
+	
     zappar_pipeline_motion_attitude_submit: function() {},
     zappar_pipeline_motion_attitude_submit__deps: ['$zappar_support'],
+	
+    zappar_pipeline_motion_attitude_submit_int: function() {},
+    zappar_pipeline_motion_attitude_submit_int__deps: ['$zappar_support'],
 	
     zappar_pipeline_motion_attitude_matrix_submit: function() {},
     zappar_pipeline_motion_attitude_matrix_submit__deps: ['$zappar_support'],
@@ -1392,5 +1565,57 @@ $zappar_support__postset: `
 	
     zappar_instant_world_tracker_anchor_pose_set_from_camera_offset: function() {},
     zappar_instant_world_tracker_anchor_pose_set_from_camera_offset__deps: ['$zappar_support'],
+	zappar_world_tracker_create: function() {},
+    zappar_world_tracker_create__deps: ['$zappar_support'],
+    zappar_world_tracker_destroy: function() {},
+    zappar_world_tracker_destroy__deps: ['$zappar_support'],
+    
+    zappar_world_tracker_enabled: function() {},
+    zappar_world_tracker_enabled__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_enabled_set: function() {},
+    zappar_world_tracker_enabled_set__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_quality: function() {},
+    zappar_world_tracker_quality__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_plane_count: function() {},
+    zappar_world_tracker_plane_count__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_plane_pose_raw: function() {},
+    zappar_world_tracker_plane_pose_raw__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_plane_pose_camera_relative: function() {},
+    zappar_world_tracker_plane_pose_camera_relative__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_plane_pose: function() {},
+    zappar_world_tracker_plane_pose__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_world_anchor_valid: function() {},
+    zappar_world_tracker_world_anchor_valid__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_world_anchor_pose_raw: function() {},
+    zappar_world_tracker_world_anchor_pose_raw__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_world_anchor_pose_camera_relative: function() {},
+    zappar_world_tracker_world_anchor_pose_camera_relative__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_world_anchor_pose: function() {},
+    zappar_world_tracker_world_anchor_pose__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_ground_anchor_valid: function() {},
+    zappar_world_tracker_ground_anchor_valid__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_ground_anchor_pose_raw: function() {},
+    zappar_world_tracker_ground_anchor_pose_raw__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_ground_anchor_pose_camera_relative: function() {},
+    zappar_world_tracker_ground_anchor_pose_camera_relative__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_ground_anchor_pose: function() {},
+    zappar_world_tracker_ground_anchor_pose__deps: ['$zappar_support'],
+	
+    zappar_world_tracker_reset: function() {},
+    zappar_world_tracker_reset__deps: ['$zappar_support'],
 
 });
