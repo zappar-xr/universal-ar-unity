@@ -30,6 +30,8 @@ namespace Zappar
             }
         };
 
+#pragma warning disable 0414    //private declared but not used
+
         public IntPtr? WorldTracker = null;
 
         [SerializeField, Tooltip("Show tracker initialization state animation via texture")]
@@ -67,6 +69,8 @@ namespace Zappar
         //Whether world tracker is in a good tracking state
         public bool TrackerInitialized { get; private set; }
         public bool ShowInitializationAnim => m_showInitializationAnim;
+
+#pragma warning restore 0414
 
         private void Start()
         {
