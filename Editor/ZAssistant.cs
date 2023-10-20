@@ -91,13 +91,18 @@ namespace Zappar.Editor
 #endif
                 //Texture Compression
 #if UNITY_2021_2_OR_NEWER
-                if (EditorUserBuildSettings.webGLBuildSubtarget == WebGLTextureSubtarget.DXT)
+                if (EditorUserBuildSettings.webGLBuildSubtarget == WebGLTextureSubtarget.DXT || EditorUserBuildSettings.webGLBuildSubtarget == WebGLTextureSubtarget.Generic)
                 {
+#if UNITY_2022_2_OR_NEWER
+                    Debug.Log("Updating WebGL default TextureCompression to use ASTC, which is more widely supported on mobile devices. Change it from Player settings if not desired.");
+                    EditorUserBuildSettings.webGLBuildSubtarget = WebGLTextureSubtarget.ASTC;   //optimized for mobile builds
+#else
                     Debug.Log("Updating WebGL default TextureCompression to use ETC2, which is more widely supported on mobile devices. Change it from Player settings if not desired.");
                     EditorUserBuildSettings.webGLBuildSubtarget = WebGLTextureSubtarget.ETC2;   //optimized for mobile builds
+#endif
                 }
 #endif
-            }
+                }
 
             if (ZAssistant.MatchConfigSettings(config, ZProjectSettings.GraphicsOptimum))
             {

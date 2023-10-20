@@ -1,6 +1,6 @@
 {
   "name": "com.zappar.uar",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "displayName": "Universal AR",
   "description": "Zappar's best in class Universal AR SDK for face tracking, image tracking, and instant world tracking, targeted for Web and mobile platforms.",
   "documentationUrl" : "https://docs.zap.works/universal-ar/unity/",
