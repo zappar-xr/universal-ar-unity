@@ -172,6 +172,9 @@
                 unityVert.uv[1] = zFaceUVs[2*i+1];
                 bufferPtr += vertexStride;
             }
+            free((void*)zFaceVerts);
+            free((void*)zFaceNorms);
+            free((void*)zFaceUVs);
             //bufferPtr -= bufferSize; //vertexCount * vertexStride
             glBufferSubData(GL_ARRAY_BUFFER,0,bufferSize,mapped);
             //free(mapped);

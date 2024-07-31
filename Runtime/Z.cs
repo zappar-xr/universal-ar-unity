@@ -168,6 +168,8 @@ public class Z
     [DllImport(Config.PluginName)]
     private static extern void zappar_initialize();
 
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_free(IntPtr x);
 
     [DllImport(Config.PluginName)]
     private static extern void zappar_log_level_set(uint level);
@@ -606,6 +608,7 @@ public class Z
     public static Matrix4x4 PipelineProjectionMatrix(IntPtr o, int renderWidth, int renderHeight, float zNear, float zFar, ref float[] cameraModel) {
         IntPtr ret = zappar_pipeline_camera_model(o);
         Marshal.Copy(ret, cameraModel, 0, 6);
+        zappar_free(ret);
         if (cameraModel[0] == 0) return Matrix4x4.identity;
         return ProjectionMatrixFromCameraModelExt(cameraModel, renderWidth, renderHeight, zNear, zFar);
     }
@@ -881,6 +884,7 @@ public class Z
         IntPtr ret = zappar_projection_matrix_from_camera_model(model, renderWidth, renderHeight);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -896,6 +900,7 @@ public class Z
         IntPtr ret = zappar_projection_matrix_from_camera_model_ext(model, renderWidth, renderHeight, zNear, zFar);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1004,6 +1009,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_frame_texture_matrix(o, renderWidth, renderHeight, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1026,6 +1032,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_model(o);
         float[] retArr = new float[6];
         Marshal.Copy(ret, retArr, 0, 6);
+        zappar_free(ret);
         return retArr;
     }
 	public static Matrix4x4 PipelineCameraPoseDefault(IntPtr o) {
@@ -1033,6 +1040,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_pose_default(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1045,6 +1053,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_pose_with_attitude(o, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1060,6 +1069,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_pose_with_origin(o, arg_pose);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1092,6 +1102,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_frame_camera_attitude(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1103,6 +1114,7 @@ public class Z
         IntPtr ret = zappar_pipeline_camera_frame_device_attitude(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1173,6 +1185,7 @@ public class Z
         int N = PipelineSequenceRecordDataSize(o);
         byte[] retBytes = new byte[N];
         Marshal.Copy(ret, retBytes, 0, N);
+        zappar_free(ret);
         return retBytes;
     }
 	public static int PipelineSequenceRecordDataSize(IntPtr o) {
@@ -1270,6 +1283,7 @@ public class Z
         int N = ImageTrackerTargetPreviewCompressedSize(o, indx);
         byte[] retBytes = new byte[N];
         Marshal.Copy(ret, retBytes, 0, N);
+        zappar_free(ret);
         return retBytes;
     }
 	public static int ImageTrackerTargetPreviewCompressedSize(IntPtr o, int indx) {
@@ -1291,6 +1305,7 @@ public class Z
         int N = ImageTrackerTargetPreviewRgbaSize(o, indx);
         byte[] retBytes = new byte[N];
         Marshal.Copy(ret, retBytes, 0, N);
+        zappar_free(ret);
         return retBytes;
     }
 	public static int ImageTrackerTargetPreviewRgbaSize(IntPtr o, int indx) {
@@ -1320,6 +1335,7 @@ public class Z
         byte[] src = new byte[numBytes];
         int[] dst = new int[numIndices];
         Marshal.Copy(ret, src, 0, numBytes);
+        zappar_free(ret);
         for (int n = 0; n < numBytes; n+=2) 
         {          
             dst[n/2] = (int)BitConverter.ToUInt16(src, n);   
@@ -1339,6 +1355,7 @@ public class Z
         int N = ImageTrackerTargetPreviewMeshVerticesSize(o, indx);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static int ImageTrackerTargetPreviewMeshVerticesSize(IntPtr o, int indx) {
@@ -1354,6 +1371,7 @@ public class Z
         int N = ImageTrackerTargetPreviewMeshNormalsSize(o, indx);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static int ImageTrackerTargetPreviewMeshNormalsSize(IntPtr o, int indx) {
@@ -1369,6 +1387,7 @@ public class Z
         int N = ImageTrackerTargetPreviewMeshUvsSize(o, indx);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static int ImageTrackerTargetPreviewMeshUvsSize(IntPtr o, int indx) {
@@ -1405,6 +1424,7 @@ public class Z
         IntPtr ret = zappar_image_tracker_anchor_pose_raw(o, indx);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1418,6 +1438,7 @@ public class Z
         IntPtr ret = zappar_image_tracker_anchor_pose_camera_relative(o, indx, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1435,6 +1456,7 @@ public class Z
         IntPtr ret = zappar_image_tracker_anchor_pose(o, indx, arg_camera_pose, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1496,6 +1518,7 @@ public class Z
         IntPtr ret = zappar_face_tracker_anchor_pose_raw(o, indx);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1509,6 +1532,7 @@ public class Z
         IntPtr ret = zappar_face_tracker_anchor_pose_camera_relative(o, indx, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1526,6 +1550,7 @@ public class Z
         IntPtr ret = zappar_face_tracker_anchor_pose(o, indx, arg_camera_pose, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1538,6 +1563,7 @@ public class Z
         IntPtr ret = zappar_face_tracker_anchor_identity_coefficients(o, indx);
         float[] coefficients = new float[50];
             Marshal.Copy(ret, coefficients, 0, 50);
+            zappar_free(ret);
             return coefficients;
     }
 	public static float[] FaceTrackerAnchorExpressionCoefficients(IntPtr o, int indx) {
@@ -1546,6 +1572,7 @@ public class Z
         IntPtr ret = zappar_face_tracker_anchor_expression_coefficients(o, indx);
         float[] coefficients = new float[29];
             Marshal.Copy(ret, coefficients, 0, 29);
+            zappar_free(ret);
             return coefficients;
     }
 	public static void FaceMeshLoadFromMemory(IntPtr o, byte[] data, bool fill_mouth, bool fill_eye_l, bool fill_eye_r, bool fill_neck) {
@@ -1606,6 +1633,7 @@ public class Z
         byte[] src = new byte[numBytes];
         int[] dst = new int[numIndices];
         Marshal.Copy(ret, src, 0, numBytes);
+        zappar_free(ret);
         for (int n = 0; n < numBytes; n+=2) 
         {          
             dst[n/2] = (int)BitConverter.ToUInt16(src, n);   
@@ -1623,6 +1651,7 @@ public class Z
         int N = FaceMeshVerticesSize(o);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static int FaceMeshNormalsSize(IntPtr o) {
@@ -1636,6 +1665,7 @@ public class Z
         int N = FaceMeshNormalsSize(o);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static int FaceMeshUvsSize(IntPtr o) {
@@ -1649,6 +1679,7 @@ public class Z
         int N = FaceMeshUvsSize(o);
         float[] retFloats = new float[N];
         Marshal.Copy(ret, retFloats, 0, N);
+        zappar_free(ret);
         return retFloats;
     }
 	public static void FaceLandmarkUpdate(IntPtr o, float[] identity, float[] expression, bool mirrored) {
@@ -1664,6 +1695,7 @@ public class Z
         IntPtr ret = zappar_face_landmark_anchor_pose(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1725,6 +1757,7 @@ public class Z
         IntPtr ret = zappar_instant_world_tracker_anchor_pose_raw(o);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1737,6 +1770,7 @@ public class Z
         IntPtr ret = zappar_instant_world_tracker_anchor_pose_camera_relative(o, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1753,6 +1787,7 @@ public class Z
         IntPtr ret = zappar_instant_world_tracker_anchor_pose(o, arg_camera_pose, mirror ? 1 : 0);
         float[] retFloats = new float[16];
         Marshal.Copy(ret, retFloats, 0, 16);
+        zappar_free(ret);
         Matrix4x4 retMatrix = new Matrix4x4();
         for (int i = 0; i < 4; i++)
             for (int k = 0; k < 4; k++)
@@ -1856,25 +1891,30 @@ public class Z
     public static void PipelineCameraFrameTextureMatrix(IntPtr o, ref float[] mat4x4, int renderWidth, int renderHeight, bool mirror) {
         IntPtr ret = zappar_pipeline_camera_frame_texture_matrix(o, renderWidth, renderHeight, mirror ? 1 : 0);
         Marshal.Copy(ret, mat4x4, 0, 16);
+        zappar_free(ret);
     }
     public static void FaceTrackerAnchorUpdateIdentityCoefficients(IntPtr o, int indx, ref float[] coefficients) {
         IntPtr ret = zappar_face_tracker_anchor_identity_coefficients(o, indx);
         Marshal.Copy(ret, coefficients, 0, 50);
+        zappar_free(ret);
     }
     public static void FaceTrackerAnchorUpdateExpressionCoefficients(IntPtr o, int indx, ref float[] coefficients)
     {
         IntPtr ret = zappar_face_tracker_anchor_expression_coefficients(o, indx);
         Marshal.Copy(ret, coefficients, 0, 29);
+        zappar_free(ret);
     }
     public static void UpdateFaceMeshVertices(IntPtr o, ref float[] verts)
     {
         IntPtr ret = zappar_face_mesh_vertices(o);
         Marshal.Copy(ret, verts, 0, verts.Length);
+        zappar_free(ret);
     }
     public static void UpdateFaceMeshNormals(IntPtr o, ref float[] normals)
     {
         IntPtr ret = zappar_face_mesh_normals(o);
         Marshal.Copy(ret, normals, 0, normals.Length);
+        zappar_free(ret);
     }
 }
 }

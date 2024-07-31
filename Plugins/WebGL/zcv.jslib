@@ -44,6 +44,10 @@ $zappar_support__postset: `
         window.zappar_native_callbacks = zappar_native_callbacks;
     }
 
+    _zappar_free = function(o) {
+        _free(o);
+    }
+
     _zappar_pipeline_gl_context_set = function( pipeline ) {
         zappar.pipeline_gl_context_set(pipeline, GLctx);
     };
@@ -949,6 +953,9 @@ $zappar_support__postset: `
 
     zappar_initialize: function() {},
     zappar_initialize__deps: ['$zappar_support'],
+
+    zappar_free: function() {},
+    zappar_free__deps: ['$zappar_support'],
 
     zappar_is_visible_webgl: function () { return document.visibilityState === "visible"; },
 
