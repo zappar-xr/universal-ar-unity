@@ -168,8 +168,6 @@ public class Z
     [DllImport(Config.PluginName)]
     private static extern void zappar_initialize();
 
-    [DllImport(Config.PluginName)]
-    private static extern void zappar_free(IntPtr x);
 
     [DllImport(Config.PluginName)]
     private static extern void zappar_log_level_set(uint level);
@@ -512,6 +510,9 @@ public class Z
 
     [DllImport(Config.PluginName)]
     private static extern int zappar_has_initialized();
+
+    [DllImport(Config.PluginName)]
+    private static extern void zappar_free(IntPtr x);
 
 #if UNITY_WEBGL
     [DllImport ("__Internal")]
