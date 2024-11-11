@@ -4,6 +4,10 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.2.9] - 2024-11-11
+### Fixed
+- Updated to support analytics on new Zapworks domains.
+
 ## [3.2.8] - 2024-09-26
 ### Fixed
 - Addressed an issue with native platforms missing the zappar_free function.
